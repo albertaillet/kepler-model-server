@@ -1,5 +1,4 @@
 # deprecated
-import pandas as pd
 
 import os
 import sys
@@ -9,10 +8,10 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 from train import PowerSourceMap, DefaultExtractor
 
-src_path = os.path.join(os.path.dirname(__file__), '../src')
-train_path = os.path.join(os.path.dirname(__file__), '../src/train')
-profile_path = os.path.join(os.path.dirname(__file__), '../src/profile')
-util_path = os.path.join(os.path.dirname(__file__), 'util')
+src_path = os.path.join(os.path.dirname(__file__), "../src")
+train_path = os.path.join(os.path.dirname(__file__), "../src/train")
+profile_path = os.path.join(os.path.dirname(__file__), "../src/profile")
+util_path = os.path.join(os.path.dirname(__file__), "util")
 
 sys.path.append(src_path)
 sys.path.append(train_path)
@@ -33,7 +32,7 @@ from extractor_test import prom_response_file, prom_response_idle_file
 from prom_types import prom_responses_to_results, TIMESTAMP_COL
 
 extractor = DefaultExtractor()
- 
+
 
 def list_subfolder(top_path):
     return [f for f in os.listdir(top_path) if not os.path.isdir(os.path.join(top_path, f))]
@@ -44,6 +43,7 @@ def compute_error(predicted_power, actual_powers):
     mse = mean_squared_error(actual_powers, predicted_power)
     mae = mean_absolute_error(actual_powers, predicted_power)
     return mae, mse
+
 
 # return model, metadata
 def process(train_dataset_name, test_dataset_name, test_json_file_path, test_idle_file_path, target_path):
@@ -57,9 +57,9 @@ def process(train_dataset_name, test_dataset_name, test_json_file_path, test_idl
         test_data = prom_responses_to_results(test_response)
     node_types, _ = extractor.get_node_types(idle_data)
     if node_types is None:
-        node_type = "1" # default node type
+        node_type = "1"  # default node type
     else:
-        node_type = node_types[0] # limit only one node type in single data set
+        node_type = node_types[0]  # limit only one node type in single data set
 
     # find best_ab
     best_abs_model = find_best_abs_model()
@@ -94,28 +94,28 @@ def process(train_dataset_name, test_dataset_name, test_json_file_path, test_idl
                             abs_model = best_abs_model[energy_source]
                             predicted_background_power = abs_model.get_power(background_data)
                             predicted_background_dynamic_power = model.get_power(background_data)
-                        
-                        # for each energy_component 
+
+                        # for each energy_component
                         for energy_component, values in predicted_data.items():
                             item = {
                                 "train_dataset": train_dataset_name,
-                                "test_dataset": test_dataset_name, 
+                                "test_dataset": test_dataset_name,
                                 "isolator": isolator,
                                 "energy_source": energy_source,
                                 "feature_group": feature_group,
                                 "model": model.name,
                                 "model_path": model_path,
-                                "energy_component": energy_component
+                                "energy_component": energy_component,
                             }
-                                
+
                             label_power_columns = [col for col in power_columns if energy_component in col]
                             # sum label value for all unit
                             # mean to squeeze value of power back
                             sum_power_label = predicted_data.groupby([TIMESTAMP_COL]).mean()[label_power_columns].sum(axis=1).sort_index()
                             # append predicted value to data_with_prediction
-                            
+
                             # TO-DO: use predict_and_sort in train_isolator.py
-                            
+
                             predicted_power_colname = get_predicted_power_colname(energy_component)
                             data_with_prediction[predicted_power_colname] = values
                             sum_predicted_power = data_with_prediction.groupby([TIMESTAMP_COL]).sum().sort_index()[predicted_power_colname]
@@ -124,9 +124,9 @@ def process(train_dataset_name, test_dataset_name, test_json_file_path, test_idl
                             else:
                                 # profile-based
                                 min_watt, max_watt = get_min_max_watt(profiles, energy_component, node_type)
-                                profile_watt = (min_watt + max_watt)/2
+                                profile_watt = (min_watt + max_watt) / 2
                                 profile_reconstructed_power = sum_predicted_power + profile_watt
-                                item["profile_mae"], item["profile_mse"]= compute_error(sum_power_label, profile_reconstructed_power)
+                                item["profile_mae"], item["profile_mse"] = compute_error(sum_power_label, profile_reconstructed_power)
                                 item["profile_watt"] = profile_watt
 
                                 # calculate background power cols (used by both abs-predicted and min)
@@ -137,21 +137,22 @@ def process(train_dataset_name, test_dataset_name, test_json_file_path, test_idl
                                 predicted_background_dynamic_power_values = predicted_background_dynamic_power[energy_component]
                                 dynamic_background_power_colname = get_predicted_dynamic_background_power_colname(energy_component)
                                 background_data[dynamic_background_power_colname] = predicted_background_dynamic_power_values
-                                
+
                                 sorted_background_data = background_data.groupby([TIMESTAMP_COL]).sum().sort_index()
                                 # abs-predicted based
                                 sum_background_power = sorted_background_data[background_power_colname]
                                 trained_reconstructed_power = sum_background_power + sum_predicted_power
-                                item["train_bg_mae"], item["train_bg_mse"]= compute_error(sum_power_label, trained_reconstructed_power)
+                                item["train_bg_mae"], item["train_bg_mse"] = compute_error(sum_power_label, trained_reconstructed_power)
                                 item["avg_train_bg"] = sum_background_power.mean()
                                 item["bg_abs_model"] = abs_model.name
                                 # min based
                                 sum_dynamic_background_power = sorted_background_data[dynamic_background_power_colname]
                                 min_reconstructed_power = sum_dynamic_background_power + min_watt + sum_predicted_power
-                                item["min_bg_mae"], item["min_bg_mse"]= compute_error(sum_power_label, min_reconstructed_power)
-                                item["min"] = min_watt       
+                                item["min_bg_mae"], item["min_bg_mse"] = compute_error(sum_power_label, min_reconstructed_power)
+                                item["min"] = min_watt
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     dataset_name = "sample_data"
     json_file_path = prom_response_file
     idle_file_path = prom_response_idle_file

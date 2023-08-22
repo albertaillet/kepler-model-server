@@ -3,17 +3,15 @@ import sys
 import pandas as pd
 from abc import ABCMeta, abstractmethod
 
-util_path = os.path.join(os.path.dirname(__file__), '..', '..', 'util')
+util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
 sys.path.append(util_path)
 
 from train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
-from prom_types import TIMESTAMP_COL, SOURCE_COL, get_energy_unit, \
-    usage_ratio_query,node_info_query, \
-        energy_component_to_query, feature_to_query, \
-            pkg_id_column, container_id_cols, node_info_column
+from prom_types import TIMESTAMP_COL, SOURCE_COL, get_energy_unit, usage_ratio_query, node_info_query, energy_component_to_query, feature_to_query, pkg_id_column, container_id_cols, node_info_column
 from loader import default_node_type
 from extract_types import container_id_colname, ratio_to_col, component_to_col, get_unit_vals
 from preprocess import drop_zero_column, find_correlations
+
 
 # append ratio for each unit
 def append_ratio_for_pkg(feature_power_data, is_aggr, query_results, power_columns):
@@ -22,7 +20,7 @@ def append_ratio_for_pkg(feature_power_data, is_aggr, query_results, power_colum
         # not relate/not append
         return feature_power_data
     use_default_ratio = False
-    default_ratio = 1/len(unit_vals)
+    default_ratio = 1 / len(unit_vals)
     if usage_ratio_query not in query_results:
         use_default_ratio = True
     else:
@@ -30,8 +28,8 @@ def append_ratio_for_pkg(feature_power_data, is_aggr, query_results, power_colum
         if is_aggr:
             ratio_df = ratio_df.groupby([TIMESTAMP_COL, pkg_id_column]).sum()[usage_ratio_query]
         else:
-            ratio_df[container_id_colname] = ratio_df[container_id_cols].apply(lambda x: '/'.join(x), axis=1)
-            ratio_df = ratio_df.groupby([TIMESTAMP_COL, pkg_id_column, container_id_colname]).sum()[usage_ratio_query]   
+            ratio_df[container_id_colname] = ratio_df[container_id_cols].apply(lambda x: "/".join(x), axis=1)
+            ratio_df = ratio_df.groupby([TIMESTAMP_COL, pkg_id_column, container_id_colname]).sum()[usage_ratio_query]
     ratio_colnames = []
     for unit_val in unit_vals:
         ratio_colname = ratio_to_col(unit_val)
@@ -41,16 +39,17 @@ def append_ratio_for_pkg(feature_power_data, is_aggr, query_results, power_colum
             target_ratio_df = ratio_df.xs(unit_val, level=1)
             feature_power_data = feature_power_data.join(target_ratio_df).dropna()
             feature_power_data = feature_power_data.rename(columns={usage_ratio_query: ratio_colname})
-        ratio_colnames +=[ratio_colname]
-    tmp_total_col = 'total_ratio'
+        ratio_colnames += [ratio_colname]
+    tmp_total_col = "total_ratio"
     feature_power_data[tmp_total_col] = feature_power_data[ratio_colnames].sum(axis=1)
     for ratio_colname in ratio_colnames:
         feature_power_data[ratio_colname] /= feature_power_data[tmp_total_col]
     return feature_power_data.drop(columns=[tmp_total_col])
 
+
 class Extractor(metaclass=ABCMeta):
     # extractor abstract:
-    # return 
+    # return
     # - feature_power_data: dataframe of feature columns concat with power columns
     # - power_columns: identify power columns (labels)
     # - corr: correlation matrix between features and powers
@@ -58,12 +57,13 @@ class Extractor(metaclass=ABCMeta):
     def extract(self, query_results, feature_group):
         return NotImplemented
 
-# extract data from query 
+
+# extract data from query
 # for node-level
 # return DataFrame (index=timestamp, column=[features][power columns][node_type]), power_columns
 
-class DefaultExtractor(Extractor):
 
+class DefaultExtractor(Extractor):
     # implement extract function
     def extract(self, query_results, energy_components, feature_group, energy_source, node_level, aggr=True):
         # 1. compute energy different per timestamp and concat all energy component and unit
@@ -73,7 +73,7 @@ class DefaultExtractor(Extractor):
         power_data = drop_zero_column(power_data, power_data.columns)
         power_columns = power_data.columns
         features = FeatureGroups[FeatureGroup[feature_group]]
-        # 2. separate workload and system 
+        # 2. separate workload and system
         workload_features = [feature for feature in features if feature not in SYSTEM_FEATURES]
         system_features = [feature for feature in features if feature in SYSTEM_FEATURES]
         # 3. compute aggregated utilization different per timestamp and concat them
@@ -82,7 +82,7 @@ class DefaultExtractor(Extractor):
             return None, None, None
         # join power
         feature_power_data = feature_data.set_index(TIMESTAMP_COL).join(power_data).sort_index().dropna()
-        
+
         # aggregate data if needed
         is_aggr = node_level and aggr
         if is_aggr:
@@ -97,7 +97,7 @@ class DefaultExtractor(Extractor):
         if len(system_features) > 0:
             system_feature_data = self.get_system_feature_data(query_results, system_features)
             feature_power_data = feature_power_data.join(system_feature_data).sort_index().dropna()
-        else: 
+        else:
             feature_power_data = feature_power_data.sort_index()
 
         # 5. add node info data
@@ -106,16 +106,15 @@ class DefaultExtractor(Extractor):
             feature_power_data = feature_power_data.join(node_info_data)
         if node_info_column not in feature_power_data.columns:
             feature_power_data[node_info_column] = int(default_node_type)
-        
-        
+
         # 6. validate input with correlation
         corr = find_correlations(energy_source, feature_power_data, power_columns, workload_features)
 
         # 7. apply utilization ratio to each power unit because the power unit is summation of all container utilization
         feature_power_data = append_ratio_for_pkg(feature_power_data, is_aggr, query_results, power_columns)
-        
-        return  feature_power_data, power_columns, corr
-    
+
+        return feature_power_data, power_columns, corr
+
     def get_workload_feature_data(self, query_results, features):
         feature_data = None
         container_df_map = dict()
@@ -129,12 +128,12 @@ class DefaultExtractor(Extractor):
                 return None
             aggr_query_data = query_results[query].copy()
             aggr_query_data.rename(columns={query: feature}, inplace=True)
-            aggr_query_data[container_id_colname] = aggr_query_data[container_id_cols].apply(lambda x: '/'.join(x), axis=1)
+            aggr_query_data[container_id_colname] = aggr_query_data[container_id_cols].apply(lambda x: "/".join(x), axis=1)
             # separate for each container_id
             container_id_list = pd.unique(aggr_query_data[container_id_colname])
-           
+
             for container_id in container_id_list:
-                container_df = aggr_query_data[aggr_query_data[container_id_colname]==container_id]
+                container_df = aggr_query_data[aggr_query_data[container_id_colname] == container_id]
                 container_df.set_index([TIMESTAMP_COL], inplace=True)
                 container_df = container_df.sort_index()
                 # drop first value (zero)
@@ -144,9 +143,9 @@ class DefaultExtractor(Extractor):
                 if len(container_df) > 1:
                     # find current value from aggregated query, dropna remove the first value
                     # divided by time difference
-                    feature_df = container_df[[feature]].diff().dropna() 
+                    feature_df = container_df[[feature]].diff().dropna()
                     # if delta < 0, set to 0 (unexpected)
-                    feature_df = feature_df/time_diff_values
+                    feature_df = feature_df / time_diff_values
                     feature_df = feature_df.mask(feature_df.lt(0)).ffill().fillna(0).convert_dtypes()
                     if container_id in container_df_map:
                         # previously found container
@@ -182,10 +181,10 @@ class DefaultExtractor(Extractor):
     def get_power_data(self, query_results, energy_components, source):
         power_data_list = []
         for component in energy_components:
-            unit_col = get_energy_unit(component) # such as package
+            unit_col = get_energy_unit(component)  # such as package
             query = energy_component_to_query(component)
             if query not in query_results:
-                print(query, 'not in', query_results)
+                print(query, "not in", query_results)
                 return None
             aggr_query_data = query_results[query].copy()
             # filter source
@@ -203,12 +202,12 @@ class DefaultExtractor(Extractor):
                     df = df.mask(df.lt(0)).ffill().fillna(0).convert_dtypes()
                     power_data_list += [df]
                 else:
-                     # sum over mode (idle, dynamic)
+                    # sum over mode (idle, dynamic)
                     aggr_query_data = aggr_query_data.groupby([unit_col, TIMESTAMP_COL]).sum().reset_index().set_index(TIMESTAMP_COL)
                     # add per unit_col
                     unit_vals = pd.unique(aggr_query_data[unit_col])
                     for unit_val in unit_vals:
-                        df = aggr_query_data[aggr_query_data[unit_col]==unit_val].copy()
+                        df = aggr_query_data[aggr_query_data[unit_col] == unit_val].copy()
                         # rename
                         colname = component_to_col(component, unit_col, unit_val)
                         df.rename(columns={query: colname}, inplace=True)
@@ -235,7 +234,7 @@ class DefaultExtractor(Extractor):
             node_info_data = query_results[node_info_query][[TIMESTAMP_COL, node_info_query]].set_index(TIMESTAMP_COL)
             node_info_data.rename(columns={node_info_query: node_info_column}, inplace=True)
         return node_info_data
-    
+
     def get_node_types(self, query_results):
         node_info_data = self.get_system_category(query_results)
         if node_info_data is None:

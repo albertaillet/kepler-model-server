@@ -10,8 +10,8 @@ import os
 import sys
 
 #################################################################
-# import internal src 
-src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+# import internal src
+src_path = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.append(src_path)
 #################################################################
 
@@ -26,9 +26,9 @@ from util import save_csv, load_csv
 
 from prom_test import get_query_results
 
-data_path = os.path.join(os.path.dirname(__file__), 'data')
+data_path = os.path.join(os.path.dirname(__file__), "data")
 assure_path(data_path)
-extractor_output_path = os.path.join(data_path, 'extractor_output')
+extractor_output_path = os.path.join(data_path, "extractor_output")
 assure_path(extractor_output_path)
 
 if not os.path.exists(extractor_output_path):
@@ -41,28 +41,34 @@ test_energy_components = PowerSourceMap[test_energy_source]
 test_num_of_unit = 2
 test_customize_extractors = []
 
+
 def get_filename(extractor_name, feature_group, node_level):
     return "{}_{}_{}".format(extractor_name, feature_group, node_level)
+
 
 def get_extract_result(extractor_name, feature_group, node_level, save_path=extractor_output_path):
     filename = get_filename(extractor_name, feature_group, node_level)
     return load_csv(save_path, filename)
 
+
 def get_extract_results(extractor_name, node_level, save_path=extractor_output_path):
     all_results = dict()
     for feature_group in all_feature_groups:
-        result = get_extract_result(extractor_name, feature_group, node_level, save_path=save_path) 
+        result = get_extract_result(extractor_name, feature_group, node_level, save_path=save_path)
         if result is not None:
             all_results[feature_group] = result
     return all_results
-    
+
+
 def save_extract_results(instance, feature_group, extracted_data, node_level, save_path=extractor_output_path):
     extractor_name = instance.__class__.__name__
     filename = get_filename(extractor_name, feature_group, node_level)
     save_csv(save_path, filename, extracted_data)
 
+
 def get_expected_power_columns(energy_components=test_energy_components, num_of_unit=test_num_of_unit):
-    return [component_to_col(component, "package", unit_val) for component in energy_components for unit_val in range(0,num_of_unit)]
+    return [component_to_col(component, "package", unit_val) for component in energy_components for unit_val in range(0, num_of_unit)]
+
 
 def assert_extract(extracted_data, power_columns, energy_components, num_of_unit, feature_group):
     extracted_data_column_names = extracted_data.columns
@@ -73,8 +79,11 @@ def assert_extract(extracted_data, power_columns, energy_components, num_of_unit
     expected_power_column_length = len(energy_components) * num_of_unit
     # detail assert
     assert len(power_columns) == expected_power_column_length, "unexpected power label columns {}, expected {}".format(power_columns, expected_power_column_length)
-    expected_col_size = expected_power_column_length + len(FeatureGroups[FeatureGroup[feature_group]]) + 1 + num_of_unit # power ratio
-    assert len(extracted_data_column_names) == expected_col_size, "unexpected column length: expected {}, got {}({}) ".format(expected_col_size, extracted_data_column_names, len(extracted_data_column_names))
+    expected_col_size = expected_power_column_length + len(FeatureGroups[FeatureGroup[feature_group]]) + 1 + num_of_unit  # power ratio
+    assert len(extracted_data_column_names) == expected_col_size, "unexpected column length: expected {}, got {}({}) ".format(
+        expected_col_size, extracted_data_column_names, len(extracted_data_column_names)
+    )
+
 
 def process(query_results, feature_group, save_path=extractor_output_path, customize_extractors=test_customize_extractors, energy_source=test_energy_source, num_of_unit=2):
     energy_components = PowerSourceMap[energy_source]
@@ -90,11 +99,12 @@ def process(query_results, feature_group, save_path=extractor_output_path, custo
         save_extract_results(test_instance, feature_group, extracted_data, False, save_path=save_path)
         print("Correlations:\n")
         print(corr)
-        
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     query_results = get_query_results()
     assert len(query_results) > 0, "cannot read_sample_query_results"
-    valid_feature_groups = get_valid_feature_group_from_queries(query_results.keys())    
+    valid_feature_groups = get_valid_feature_group_from_queries(query_results.keys())
     for fg in valid_feature_groups:
         feature_group = fg.name
         process(query_results, feature_group)

@@ -1,14 +1,15 @@
-import os 
+import os
 import sys
 
 from extractor import DefaultExtractor, find_correlations
-util_path = os.path.join(os.path.dirname(__file__), '..', '..', 'util')
+
+util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
 sys.path.append(util_path)
 
 from train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
 
-class SmoothExtractor(DefaultExtractor):
 
+class SmoothExtractor(DefaultExtractor):
     def __init__(self, smooth_window=30):
         self.smooth_window = smooth_window
 
@@ -27,4 +28,3 @@ class SmoothExtractor(DefaultExtractor):
         corr = find_correlations(energy_source, feature_power_data, power_columns, workload_features)
 
         return smoothed_data, power_columns, corr
-

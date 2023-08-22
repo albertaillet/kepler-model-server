@@ -3,11 +3,11 @@ import sys
 import threading
 import pandas as pd
 
-util_path = os.path.join(os.path.dirname(__file__), '..', 'util')
+util_path = os.path.join(os.path.dirname(__file__), "..", "util")
 sys.path.append(util_path)
-extractor_path = os.path.join(os.path.dirname(__file__), 'extractor')
+extractor_path = os.path.join(os.path.dirname(__file__), "extractor")
 sys.path.append(extractor_path)
-isolator_path = os.path.join(os.path.dirname(__file__), 'isolator')
+isolator_path = os.path.join(os.path.dirname(__file__), "isolator")
 sys.path.append(isolator_path)
 
 from extractor import DefaultExtractor
@@ -25,24 +25,28 @@ from concurrent.futures import wait
 
 import shutil
 
+
 def load_class(module_name, class_name):
-    path = os.path.join(os.path.dirname(__file__), '{}/{}'.format(module_name, class_name))
+    path = os.path.join(os.path.dirname(__file__), "{}/{}".format(module_name, class_name))
     sys.path.append(path)
     import importlib
-    module_path = importlib.import_module('train.{}.{}.main'.format(module_name, class_name))
+
+    module_path = importlib.import_module("train.{}.{}.main".format(module_name, class_name))
     return getattr(module_path, class_name)
+
 
 def run_train(trainer, data, power_labels, pipeline_lock):
     trainer.process(data, power_labels, pipeline_lock=pipeline_lock)
 
-class Pipeline():
+
+class Pipeline:
     def __init__(self, name, trainers, extractor, isolator):
         self.extractor = extractor
         self.isolator = isolator
         self.trainers = trainers
         self.name = name
         self.lock = threading.Lock()
-        self.path = get_pipeline_path(model_toppath=model_toppath ,pipeline_name=self.name)
+        self.path = get_pipeline_path(model_toppath=model_toppath, pipeline_name=self.name)
         self.metadata = dict()
         self.metadata["name"] = self.name
         self.metadata["isolator"] = isolator.__class__.__name__
@@ -53,12 +57,12 @@ class Pipeline():
     def get_abs_data(self, query_results, energy_components, feature_group, energy_source, aggr):
         extracted_data, power_labels, _ = self.extractor.extract(query_results, energy_components, feature_group, energy_source, node_level=True, aggr=aggr)
         return extracted_data, power_labels
-    
+
     def get_dyn_data(self, query_results, energy_components, feature_group, energy_source):
         extracted_data, power_labels, _ = self.extractor.extract(query_results, energy_components, feature_group, energy_source, node_level=False)
         isolated_data = self.isolator.isolate(extracted_data, label_cols=power_labels, energy_source=energy_source)
         return isolated_data
-    
+
     def prepare_data(self, input_query_results, energy_components, energy_source, feature_group, aggr=True):
         query_results = input_query_results.copy()
         # 1. get abs_data
@@ -69,14 +73,14 @@ class Pipeline():
         self.print_log("{} extraction done.".format(feature_group))
         abs_data = extracted_data.copy()
         # 2. get dyn_data
-        isolated_data  = self.get_dyn_data(query_results, energy_components, feature_group, energy_source)
+        isolated_data = self.get_dyn_data(query_results, energy_components, feature_group, energy_source)
         if isolated_data is None:
             self.print_log("cannot isolate data")
             return abs_data, None, power_labels
         self.print_log("{} isolation done.".format(feature_group))
         dyn_data = isolated_data.copy()
         return abs_data, dyn_data, power_labels
-    
+
     def prepare_data_from_input_list(self, input_query_results_list, energy_components, energy_source, feature_group, aggr=True):
         index = 0
         abs_data_list = []
@@ -84,7 +88,7 @@ class Pipeline():
         power_labels = None
         for input_query_results in input_query_results_list:
             extracted_data, isolated_data, extracted_labels = self.prepare_data(input_query_results, energy_components, energy_source, feature_group, aggr)
-            if extracted_data is None: 
+            if extracted_data is None:
                 self.print_log("cannot extract data index={}".format(index))
                 continue
             abs_data_list += [extracted_data]
@@ -121,10 +125,9 @@ class Pipeline():
                 else:
                     future = executor.submit(run_train, trainer, dyn_data, power_labels, pipeline_lock=self.lock)
                     futures += [future]
-            self.print_log('Waiting for {} trainers to complete...'.format(len(futures)))
+            self.print_log("Waiting for {} trainers to complete...".format(len(futures)))
             wait(futures)
-            self.print_log('{}/{} trainers are trained from {} to {}'.format(len(futures), len(self.trainers), feature_group, energy_source))
-            
+            self.print_log("{}/{} trainers are trained from {} to {}".format(len(futures), len(self.trainers), feature_group, energy_source))
 
     def process(self, input_query_results, energy_components, energy_source, feature_group, aggr=True):
         self.print_log("{} start processing.".format(feature_group))
@@ -134,11 +137,11 @@ class Pipeline():
         self._train(abs_data, dyn_data, power_labels, energy_source, feature_group)
         self.print_pipeline_process_end(energy_source, feature_group, abs_data, dyn_data)
         return True, abs_data, dyn_data
-    
+
     def process_multiple_query(self, input_query_results_list, energy_components, energy_source, feature_group, aggr=True):
         abs_data, dyn_data, power_labels = self.prepare_data_from_input_list(input_query_results_list, energy_components, energy_source, feature_group, aggr)
         if abs_data is None or dyn_data is None or len(abs_data) == 0 or len(dyn_data) == 0:
-            return False, None, None   
+            return False, None, None
         self._train(abs_data, dyn_data, power_labels, energy_source, feature_group)
         self.print_pipeline_process_end(energy_source, feature_group, abs_data, dyn_data)
         return True, abs_data, dyn_data
@@ -152,7 +155,7 @@ class Pipeline():
             for model_type, metadata_df in model_type_metadata.items():
                 metadata_df = metadata_df.sort_values(by=[ERROR_KEY])
                 save_pipeline_metadata(self.path, self.metadata, energy_source, model_type, metadata_df)
-    
+
     def print_pipeline_process_end(self, energy_source, feature_group, abs_data, dyn_data):
         abs_trainer_names = set([trainer.__class__.__name__ for trainer in self.trainers if trainer.node_level])
         dyn_trainer_names = set([trainer.__class__.__name__ for trainer in self.trainers if not trainer.node_level])
@@ -183,10 +186,11 @@ class Pipeline():
 
     def archive_pipeline(self):
         save_path = os.path.join(model_toppath, self.name)
-        archived_file = get_archived_file(model_toppath, self.name) 
+        archived_file = get_archived_file(model_toppath, self.name)
         self.print_log("archive pipeline :" + archived_file)
         self.print_log("save_path :" + save_path)
-        shutil.make_archive(save_path, 'zip', save_path)
+        shutil.make_archive(save_path, "zip", save_path)
+
 
 def initial_trainers(trainer_names, node_level, pipeline_name, target_energy_sources, valid_feature_groups):
     trainers = []
@@ -199,9 +203,17 @@ def initial_trainers(trainer_names, node_level, pipeline_name, target_energy_sou
                 trainers += [trainer]
     return trainers
 
-def NewPipeline(pipeline_name, abs_trainer_names, dyn_trainer_names, extractor=DefaultExtractor(), isolator=MinIdleIsolator(), target_energy_sources=PowerSourceMap.keys(), valid_feature_groups=FeatureGroups.keys()):
+
+def NewPipeline(
+    pipeline_name,
+    abs_trainer_names,
+    dyn_trainer_names,
+    extractor=DefaultExtractor(),
+    isolator=MinIdleIsolator(),
+    target_energy_sources=PowerSourceMap.keys(),
+    valid_feature_groups=FeatureGroups.keys(),
+):
     abs_trainers = initial_trainers(abs_trainer_names, node_level=True, pipeline_name=pipeline_name, target_energy_sources=target_energy_sources, valid_feature_groups=valid_feature_groups)
     dyn_trainers = initial_trainers(dyn_trainer_names, node_level=False, pipeline_name=pipeline_name, target_energy_sources=target_energy_sources, valid_feature_groups=valid_feature_groups)
     trainers = abs_trainers + dyn_trainers
     return Pipeline(pipeline_name, trainers, extractor, isolator)
-    

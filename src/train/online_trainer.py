@@ -1,17 +1,17 @@
-#TODO: test
+# TODO: test
 import os
 import sys
 import time
 
-util_path = os.path.join(os.path.dirname(__file__), '..', 'util')
+util_path = os.path.join(os.path.dirname(__file__), "..", "util")
 sys.path.append(util_path)
-prom_path = os.path.join(os.path.dirname(__file__), 'prom')
+prom_path = os.path.join(os.path.dirname(__file__), "prom")
 sys.path.append(prom_path)
-extractor_path = os.path.join(os.path.dirname(__file__), 'extractor')
+extractor_path = os.path.join(os.path.dirname(__file__), "extractor")
 sys.path.append(extractor_path)
-profiler_path = os.path.join(os.path.dirname(__file__), 'profiler')
+profiler_path = os.path.join(os.path.dirname(__file__), "profiler")
 sys.path.append(profiler_path)
-isolator_path = os.path.join(os.path.dirname(__file__), 'isolator')
+isolator_path = os.path.join(os.path.dirname(__file__), "isolator")
 sys.path.append(isolator_path)
 
 from prom_query import PrometheusClient
@@ -20,7 +20,7 @@ from config import getConfig
 from loader import DEFAULT_PIPELINE
 
 SAMPLING_INTERVAL = PROM_QUERY_INTERVAL
-SAMPLING_INTERVAL = getConfig('SAMPLING_INTERVAL', SAMPLING_INTERVAL)
+SAMPLING_INTERVAL = getConfig("SAMPLING_INTERVAL", SAMPLING_INTERVAL)
 SAMPLING_INTERVAL = int(SAMPLING_INTERVAL)
 
 from train_types import PowerSourceMap, FeatureGroups
@@ -30,19 +30,37 @@ from isolator import MinIdleIsolator, ProfileBackgroundIsolator
 from profiler import load_all_profiles
 
 
-default_trainers = ['GradientBoostingRegressorTrainer']
+default_trainers = ["GradientBoostingRegressorTrainer"]
 abs_trainer_names = default_trainers + []
 dyn_trainer_names = default_trainers + []
+
 
 def initial_pipelines():
     target_energy_sources = target_energy_sources.keys()
     valid_feature_groups = FeatureGroups.keys()
     profiles = load_all_profiles()
-    profile_pipeline = NewPipeline(DEFAULT_PIPELINE, abs_trainer_names, dyn_trainer_names, extractor=DefaultExtractor(), isolator=ProfileBackgroundIsolator(profiles), target_energy_sources=target_energy_sources, valid_feature_groups=valid_feature_groups)
-    non_profile_pipeline = NewPipeline(DEFAULT_PIPELINE, abs_trainer_names, dyn_trainer_names, extractor=DefaultExtractor(), isolator=MinIdleIsolator(), target_energy_sources=target_energy_sources, valid_feature_groups=valid_feature_groups)
+    profile_pipeline = NewPipeline(
+        DEFAULT_PIPELINE,
+        abs_trainer_names,
+        dyn_trainer_names,
+        extractor=DefaultExtractor(),
+        isolator=ProfileBackgroundIsolator(profiles),
+        target_energy_sources=target_energy_sources,
+        valid_feature_groups=valid_feature_groups,
+    )
+    non_profile_pipeline = NewPipeline(
+        DEFAULT_PIPELINE,
+        abs_trainer_names,
+        dyn_trainer_names,
+        extractor=DefaultExtractor(),
+        isolator=MinIdleIsolator(),
+        target_energy_sources=target_energy_sources,
+        valid_feature_groups=valid_feature_groups,
+    )
     return profile_pipeline, non_profile_pipeline
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     profile_pipeline, non_profile_pipeline = initial_pipelines()
     prom_client = PrometheusClient()
     while True:

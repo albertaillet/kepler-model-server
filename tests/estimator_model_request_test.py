@@ -1,6 +1,6 @@
 #########################
 # estimator_model_request_test.py
-# 
+#
 # This file covers the following cases.
 # - kepler-model-server is connected
 #   - list all available models with its corresponding available feature groups and make a dummy PowerRequest
@@ -16,11 +16,11 @@ import requests
 import os
 import sys
 
-server_path = os.path.join(os.path.dirname(__file__), '../src')
-util_path = os.path.join(os.path.dirname(__file__), '../src/util')
-train_path = os.path.join(os.path.dirname(__file__), '../src/train')
-estimate_path = os.path.join(os.path.dirname(__file__), '../src/estimate')
-prom_path = os.path.join(os.path.dirname(__file__), '../src/train/prom')
+server_path = os.path.join(os.path.dirname(__file__), "../src")
+util_path = os.path.join(os.path.dirname(__file__), "../src/util")
+train_path = os.path.join(os.path.dirname(__file__), "../src/train")
+estimate_path = os.path.join(os.path.dirname(__file__), "../src/estimate")
+prom_path = os.path.join(os.path.dirname(__file__), "../src/train/prom")
 
 sys.path.append(server_path)
 sys.path.append(util_path)
@@ -38,14 +38,14 @@ from extractor_test import test_energy_source
 
 from estimator_power_request_test import generate_request
 
-os.environ['MODEL_SERVER_URL'] = 'http://localhost:8100'
+os.environ["MODEL_SERVER_URL"] = "http://localhost:8100"
 
 import json
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     energy_source = test_energy_source
     # test getting model from server
-    os.environ['MODEL_SERVER_ENABLE'] = "true"
+    os.environ["MODEL_SERVER_ENABLE"] = "true"
     available_models = list_all_models()
     print("Available Models:", available_models)
     for output_type_name, valid_fgs in available_models.items():
@@ -61,11 +61,10 @@ if __name__ == '__main__':
             data = json.dumps(request_json)
             output = handle_request(data)
             print("result {}/{} from model server: {}".format(output_type_name, fg_name, output))
-            assert len(output['powers']) > 0, "cannot get power {}\n {}".format(output['msg'], request_json)
-            
+            assert len(output["powers"]) > 0, "cannot get power {}\n {}".format(output["msg"], request_json)
 
     # test with initial models
-    os.environ['MODEL_SERVER_ENABLE'] = "false"
+    os.environ["MODEL_SERVER_ENABLE"] = "false"
     for output_type in ModelOutputType:
         output_type_name = output_type.name
         url = get_init_model_url(energy_source, output_type.name)
@@ -81,17 +80,17 @@ if __name__ == '__main__':
                 request_json = generate_request(None, n=10, metrics=FeatureGroups[FeatureGroup.Full], output_type=output_type_name)
                 data = json.dumps(request_json)
                 output = handle_request(data)
-                assert len(output['powers']) > 0, "cannot get power {}\n {}".format(output['msg'], request_json)
+                assert len(output["powers"]) > 0, "cannot get power {}\n {}".format(output["msg"], request_json)
                 print("result from {}: {}".format(url, output))
 
-    output_type_name = 'AbsPower'
+    output_type_name = "AbsPower"
     estimator_enable_key = "NODE_COMPONENTS_ESTIMATOR"
     init_url_key = "NODE_COMPONENTS_INIT_URL"
     # enable model to use
     os.environ[estimator_enable_key] = "true"
 
     # test getting model from archived
-    os.environ['MODEL_SERVER_ENABLE'] = "false"
+    os.environ["MODEL_SERVER_ENABLE"] = "false"
     output_type = ModelOutputType[output_type_name]
     output_path = get_download_output_path(energy_source, output_type)
     if output_type_name in loaded_model:
@@ -104,7 +103,7 @@ if __name__ == '__main__':
     request_json = generate_request(None, n=10, metrics=FeatureGroups[FeatureGroup.KubeletOnly], output_type=output_type_name)
     data = json.dumps(request_json)
     output = handle_request(data)
-    assert len(output['powers']) > 0, "cannot get power {}\n {}".format(output['msg'], request_json)
+    assert len(output["powers"]) > 0, "cannot get power {}\n {}".format(output["msg"], request_json)
     print("result {}/{} from static set: {}".format(output_type_name, FeatureGroup.KubeletOnly.name, output))
     del loaded_model[output_type_name]
     # invalid model
@@ -112,10 +111,10 @@ if __name__ == '__main__':
     print("Requesting from ", os.environ[init_url_key])
     request_json = generate_request(None, n=10, metrics=FeatureGroups[FeatureGroup.KubeletOnly], output_type=output_type_name)
     data = json.dumps(request_json)
-    power_request = json.loads(data, object_hook = lambda d : PowerRequest(**d))
+    power_request = json.loads(data, object_hook=lambda d: PowerRequest(**d))
     output_path = get_achived_model(power_request)
     assert output_path is None, "model should be invalid\n {}".format(output_path)
-    os.environ['MODEL_CONFIG'] = "{}=true\n{}={}\n".format(estimator_enable_key,init_url_key,get_url(output_type=output_type, feature_group=FeatureGroup.KubeletOnly))
+    os.environ["MODEL_CONFIG"] = "{}=true\n{}={}\n".format(estimator_enable_key, init_url_key, get_url(output_type=output_type, feature_group=FeatureGroup.KubeletOnly))
     set_env_from_model_config()
     print("Requesting from ", os.environ[init_url_key])
     reset_failed_list()
@@ -127,4 +126,4 @@ if __name__ == '__main__':
     request_json = generate_request(None, n=10, metrics=FeatureGroups[FeatureGroup.KubeletOnly], output_type=output_type_name)
     data = json.dumps(request_json)
     output = handle_request(data)
-    assert len(output['powers']) > 0, "cannot get power {}\n {}".format(output['msg'], request_json)
+    assert len(output["powers"]) > 0, "cannot get power {}\n {}".format(output["msg"], request_json)

@@ -2,12 +2,12 @@ from flask import Flask, request, json, make_response, send_file
 
 import os
 import sys
-import logging
 import codecs
 import shutil
 import requests
-src_path = os.path.join(os.path.dirname(__file__), '..')
-util_path = os.path.join(os.path.dirname(__file__), 'util')
+
+src_path = os.path.join(os.path.dirname(__file__), "..")
+util_path = os.path.join(os.path.dirname(__file__), "util")
 
 sys.path.append(src_path)
 sys.path.append(util_path)
@@ -17,10 +17,11 @@ from util.config import getConfig, model_toppath, ERROR_KEY, MODEL_SERVER_MODEL_
 from util.loader import parse_filters, is_valid_model, load_json, load_weight, get_model_group_path, get_archived_file, METADATA_FILENAME, CHECKPOINT_FOLDERNAME, get_pipeline_path
 
 ###############################################
-# model request 
+# model request
 
-class ModelRequest():
-    def __init__(self, metrics, output_type, source='rapl', node_type=-1, weight=False, trainer_name="", filter=""):
+
+class ModelRequest:
+    def __init__(self, metrics, output_type, source="rapl", node_type=-1, weight=False, trainer_name="", filter=""):
         # target source of power metric to be predicted (e.g., rapl, acpi)
         self.source = source
         # type of node to select a model learned from similar nodes (default: -1, applied universal model learned by all node_type (TODO))
@@ -36,18 +37,20 @@ class ModelRequest():
         # whether requesting just a linear regression weight or any model archive file (default: False, an archive file of any model)
         self.weight = weight
 
+
 ###########################################
 
 MODEL_SERVER_PORT = 8100
-MODEL_SERVER_PORT = getConfig('MODEL_SERVER_PORT', MODEL_SERVER_PORT)
+MODEL_SERVER_PORT = getConfig("MODEL_SERVER_PORT", MODEL_SERVER_PORT)
 MODEL_SERVER_PORT = int(MODEL_SERVER_PORT)
 
+
 def select_best_model(valid_groupath, filters, trainer_name="", node_type=-1, weight=False):
-    model_names = [f for f in os.listdir(valid_groupath) if \
-                    f != CHECKPOINT_FOLDERNAME \
-                    and not os.path.isfile(os.path.join(valid_groupath,f)) \
-                    and (trainer_name == "" or trainer_name in f) \
-                    and (node_type == -1 or str(node_type) in f) ]
+    model_names = [
+        f
+        for f in os.listdir(valid_groupath)
+        if f != CHECKPOINT_FOLDERNAME and not os.path.isfile(os.path.join(valid_groupath, f)) and (trainer_name == "" or trainer_name in f) and (node_type == -1 or str(node_type) in f)
+    ]
     # Load metadata of trainers
     best_cadidate = None
     best_response = None
@@ -72,10 +75,12 @@ def select_best_model(valid_groupath, filters, trainer_name="", node_type=-1, we
             best_response = response
     return best_cadidate, best_response
 
+
 app = Flask(__name__)
 
+
 # return archive file or LR weight based on request (req)
-@app.route(MODEL_SERVER_MODEL_REQ_PATH, methods=['POST'])
+@app.route(MODEL_SERVER_MODEL_REQ_PATH, methods=["POST"])
 def get_model():
     model_request = request.get_json()
     print("get request /model: {}".format(model_request))
@@ -101,11 +106,7 @@ def get_model():
         return make_response("cannot find model for {} at the moment".format(model_request), 400)
     if req.weight:
         try:
-            response = app.response_class(
-            response=json.dumps(best_response),
-            status=200,
-            mimetype='application/json'
-            )
+            response = app.response_class(response=json.dumps(best_response), status=200, mimetype="application/json")
             return response
         except ValueError as err:
             return make_response("get weight response error: {}".format(err), 400)
@@ -115,13 +116,14 @@ def get_model():
         except ValueError as err:
             return make_response("send archived model error: {}".format(err), 400)
 
+
 # return name list of best-candidate pipelines
-@app.route(MODEL_SERVER_MODEL_LIST_PATH, methods=['GET'])
+@app.route(MODEL_SERVER_MODEL_LIST_PATH, methods=["GET"])
 def get_available_models():
-    fg = request.args.get('fg')
-    ot = request.args.get('ot')
-    energy_source = request.args.get('source')
-    filter = request.args.get('filter')
+    fg = request.args.get("fg")
+    ot = request.args.get("ot")
+    energy_source = request.args.get("source")
+    filter = request.args.get("filter")
 
     try:
         if fg is None:
@@ -130,16 +132,16 @@ def get_available_models():
             valid_fgs = [FeatureGroup[fg]]
 
         if ot is None:
-            output_types = [ot for ot in ModelOutputType] 
+            output_types = [ot for ot in ModelOutputType]
         else:
             output_types = [ModelOutputType[ot]]
 
         if energy_source is None:
-            energy_source = 'rapl'
+            energy_source = "rapl"
 
         if filter is None:
             filters = dict()
-        else: 
+        else:
             filters = parse_filters(filter)
 
         model_names = dict()
@@ -151,15 +153,12 @@ def get_available_models():
                     best_candidate, _ = select_best_model(valid_groupath, filters)
                     if best_candidate is None:
                         continue
-                    model_names[output_type.name][fg.name] = best_candidate['model_name']
-        response = app.response_class(
-            response=json.dumps(model_names),
-            status=200,
-            mimetype='application/json'
-            )
+                    model_names[output_type.name][fg.name] = best_candidate["model_name"]
+        response = app.response_class(response=json.dumps(model_names), status=200, mimetype="application/json")
         return response
     except (ValueError, Exception) as err:
         return make_response("failed to get best model list: {}".format(err), 400)
+
 
 def load_init_pipeline():
     print("try downloading archieved pipeline from URL: {}".format(initial_pipeline_url))
@@ -168,7 +167,7 @@ def load_init_pipeline():
     if response.status_code != 200:
         print("failed to download archieved pipeline.")
         return
-    
+
     # delete existing default pipeline
     default_pipeline = get_pipeline_path(model_toppath)
     if os.path.exists(default_pipeline):
@@ -177,8 +176,8 @@ def load_init_pipeline():
 
     # unpack pipeline
     try:
-        TMP_FILE = 'tmp.zip'
-        with codecs.open(TMP_FILE, 'wb') as f:
+        TMP_FILE = "tmp.zip"
+        with codecs.open(TMP_FILE, "wb") as f:
             f.write(response.content)
         shutil.unpack_archive(TMP_FILE, default_pipeline)
     except:
@@ -189,6 +188,7 @@ def load_init_pipeline():
     os.remove(TMP_FILE)
     print("initial pipeline is loaded to {}".format(default_pipeline))
 
-if __name__ == '__main__':
-   load_init_pipeline()
-   app.run(host="0.0.0.0", port=MODEL_SERVER_PORT)
+
+if __name__ == "__main__":
+    load_init_pipeline()
+    app.run(host="0.0.0.0", port=MODEL_SERVER_PORT)

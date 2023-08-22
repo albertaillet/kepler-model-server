@@ -1,13 +1,13 @@
 #################################################
 # config.py
 #
-# getConfig: return value set by configuration 
+# getConfig: return value set by configuration
 #            which can be from config map or environment variable
 #            if not provided, return default value
 # getPath:   return path relative to mount path
 #            create new if not exists
 #            mount path is set by configuration
-#            if mount path cannot be write, 
+#            if mount path cannot be write,
 #            set to local folder (/server)
 #
 #################################################
@@ -21,19 +21,20 @@ MNT_PATH = "/mnt"
 # can be read only (for configmap mount)
 CONFIG_PATH = "/etc/kepler/kepler.config"
 
-modelConfigPrefix = [ "_".join([level, coverage]) for level in ["NODE", "CONTAINER", "PROCESS"] for coverage in ["TOTAL", "COMPONENTS"]]
+modelConfigPrefix = ["_".join([level, coverage]) for level in ["NODE", "CONTAINER", "PROCESS"] for coverage in ["TOTAL", "COMPONENTS"]]
 
 DEFAULT_TOTAL_SOURCE = "acpi"
 DEFAULT_COMPONENTS_SOURCE = "rapl"
 
 MODEL_SERVER_SVC = "kepler-model-server.kepler.svc.cluster.local"
 DEFAULT_MODEL_SERVER_PORT = 8100
-MODEL_SERVER_ENDPOINT = 'http://{}:{}'.format(MODEL_SERVER_SVC, DEFAULT_MODEL_SERVER_PORT)
+MODEL_SERVER_ENDPOINT = "http://{}:{}".format(MODEL_SERVER_SVC, DEFAULT_MODEL_SERVER_PORT)
 MODEL_SERVER_MODEL_REQ_PATH = "/model"
 MODEL_SERVER_MODEL_LIST_PATH = "/best-models"
 MODEL_SERVER_ENABLE = False
 
-SERVE_SOCKET = '/tmp/estimator.sock'
+SERVE_SOCKET = "/tmp/estimator.sock"
+
 
 def getConfig(key, default):
     # check configmap path
@@ -44,57 +45,64 @@ def getConfig(key, default):
     # check env
     return os.getenv(key, default)
 
+
 def getPath(subpath):
     path = os.path.join(MNT_PATH, subpath)
     if not os.path.exists(path):
         os.mkdir(path)
     return path
 
+
 # update value from environment if exists
-MNT_PATH = getConfig('MNT_PATH', MNT_PATH)
+MNT_PATH = getConfig("MNT_PATH", MNT_PATH)
 if not os.path.exists(MNT_PATH) or not os.access(MNT_PATH, os.W_OK):
     # use local path if not exists or cannot write
-    MNT_PATH = os.path.join(os.path.dirname(__file__), '..')
+    MNT_PATH = os.path.join(os.path.dirname(__file__), "..")
 
-CONFIG_PATH = getConfig('CONFIG_PATH', CONFIG_PATH)
+CONFIG_PATH = getConfig("CONFIG_PATH", CONFIG_PATH)
 
-initial_pipeline_url = getConfig('INITIAL_PIPELINE_URL', get_pipeline_url())
+initial_pipeline_url = getConfig("INITIAL_PIPELINE_URL", get_pipeline_url())
 
-default_model_path = os.path.join(os.path.dirname(__file__), '..', 'models')
-model_toppath =  getPath(getConfig('MODEL_PATH', default_model_path))
+default_model_path = os.path.join(os.path.dirname(__file__), "..", "models")
+model_toppath = getPath(getConfig("MODEL_PATH", default_model_path))
 
 if not os.path.exists(model_toppath):
     os.mkdir(model_toppath)
 
-ERROR_KEY = 'mae'
-ERROR_KEY = getConfig('ERROR_KEY', ERROR_KEY)
+ERROR_KEY = "mae"
+ERROR_KEY = getConfig("ERROR_KEY", ERROR_KEY)
+
 
 def is_model_server_enabled():
-    return getConfig('MODEL_SERVER_ENABLE', "false").lower() == "true"
+    return getConfig("MODEL_SERVER_ENABLE", "false").lower() == "true"
+
 
 def _model_server_endpoint():
-    MODEL_SERVER_URL = getConfig('MODEL_SERVER_URL', MODEL_SERVER_SVC)
+    MODEL_SERVER_URL = getConfig("MODEL_SERVER_URL", MODEL_SERVER_SVC)
     if MODEL_SERVER_URL == MODEL_SERVER_SVC:
-        MODEL_SERVER_PORT = getConfig('MODEL_SERVER_PORT', DEFAULT_MODEL_SERVER_PORT)
+        MODEL_SERVER_PORT = getConfig("MODEL_SERVER_PORT", DEFAULT_MODEL_SERVER_PORT)
         MODEL_SERVER_PORT = int(MODEL_SERVER_PORT)
-        modelServerEndpoint = 'http://{}:{}'.format(MODEL_SERVER_URL, MODEL_SERVER_PORT)
+        modelServerEndpoint = "http://{}:{}".format(MODEL_SERVER_URL, MODEL_SERVER_PORT)
     else:
         modelServerEndpoint = MODEL_SERVER_URL
     return modelServerEndpoint
 
+
 def get_model_server_req_endpoint():
-    return _model_server_endpoint() + getConfig('MODEL_SERVER_MODEL_REQ_PATH', MODEL_SERVER_MODEL_REQ_PATH)
+    return _model_server_endpoint() + getConfig("MODEL_SERVER_MODEL_REQ_PATH", MODEL_SERVER_MODEL_REQ_PATH)
+
 
 def get_model_server_list_endpoint():
-    return _model_server_endpoint() + getConfig('MODEL_SERVER_MODEL_LIST_PATH', MODEL_SERVER_MODEL_LIST_PATH)
+    return _model_server_endpoint() + getConfig("MODEL_SERVER_MODEL_LIST_PATH", MODEL_SERVER_MODEL_LIST_PATH)
+
 
 # set_env_from_model_config: extract environment values based on environment key MODEL_CONFIG
 def set_env_from_model_config():
-    model_config = getConfig('MODEL_CONFIG', "")
+    model_config = getConfig("MODEL_CONFIG", "")
     if model_config != "":
         lines = model_config.splitlines()
         for line in lines:
-            splits = line.split('=')
+            splits = line.split("=")
             if len(splits) > 1:
                 os.environ[splits[0]] = splits[1]
                 print("set {} to {}.".format(splits[0], splits[1]))
@@ -105,9 +113,11 @@ def is_estimator_enable(prefix):
     value = getConfig(envKey, "")
     return value.lower() == "true"
 
+
 def get_init_url(prefix):
     envKey = "_".join([prefix, "INIT_URL"])
     return getConfig(envKey, "")
+
 
 def get_energy_source(prefix):
     if "TOAL" in prefix:
@@ -123,7 +133,7 @@ def get_init_model_url(energy_source, output_type):
             modelURL = get_init_url(prefix)
             print("get init url", modelURL)
             if modelURL == "" and is_support_output_type(output_type):
-                print("init URL is not set, try using default URL".format(output_type))
+                print("init URL is not set, try using default URL".format())
                 return get_url(output_type=ModelOutputType[output_type], energy_source=energy_source)
             else:
                 return modelURL

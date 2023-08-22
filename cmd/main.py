@@ -6,18 +6,18 @@ import pandas as pd
 
 data_path = "/data"
 default_output_filename = "output"
-default_trainer_names = [ 'PolynomialRegressionTrainer', 'GradientBoostingRegressorTrainer', 'SGDRegressorTrainer', 'KNeighborsRegressorTrainer', 'LinearRegressionTrainer','SVRRegressorTrainer']
+default_trainer_names = ["PolynomialRegressionTrainer", "GradientBoostingRegressorTrainer", "SGDRegressorTrainer", "KNeighborsRegressorTrainer", "LinearRegressionTrainer", "SVRRegressorTrainer"]
 default_trainers = ",".join(default_trainer_names)
 
 UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
 data_path = os.getenv("CPE_DATAPATH", data_path)
 
 # set model top path to data path
-os.environ['MODEL_PATH'] = data_path
+os.environ["MODEL_PATH"] = data_path
 
-cur_path = os.path.join(os.path.dirname(__file__), '.')
+cur_path = os.path.join(os.path.dirname(__file__), ".")
 sys.path.append(cur_path)
-src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+src_path = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.append(src_path)
 
 from util.prom_types import PROM_SERVER, PROM_QUERY_INTERVAL, PROM_QUERY_STEP, PROM_HEADERS, PROM_SSL_DISABLE
@@ -29,10 +29,11 @@ from util.config import ERROR_KEY
 from util import get_valid_feature_group_from_queries, PowerSourceMap
 from train.prom.prom_query import _range_queries
 
+
 def print_file_to_stdout(args):
     file_path = os.path.join(data_path, args.output)
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             contents = file.read()
             print(contents)
     except FileNotFoundError:
@@ -40,14 +41,16 @@ def print_file_to_stdout(args):
     except IOError:
         print(f"Error: Unable to read output '{file_path}'.")
 
+
 def extract_time(benchmark_filename):
     data = load_json(data_path, benchmark_filename)
     start_str = data["metadata"]["creationTimestamp"]
-    start = datetime.datetime.strptime(start_str, '%Y-%m-%dT%H:%M:%SZ')
+    start = datetime.datetime.strptime(start_str, "%Y-%m-%dT%H:%M:%SZ")
     end_str = data["status"]["results"][-1]["repetitions"][-1]["pushedTime"].split(".")[0]
-    end = datetime.datetime.strptime(end_str, '%Y-%m-%d %H:%M:%S')
+    end = datetime.datetime.strptime(end_str, "%Y-%m-%d %H:%M:%S")
     print(UTC_OFFSET_TIMEDELTA)
-    return start-UTC_OFFSET_TIMEDELTA, end-UTC_OFFSET_TIMEDELTA
+    return start - UTC_OFFSET_TIMEDELTA, end - UTC_OFFSET_TIMEDELTA
+
 
 def summary_validation(validate_df):
     if len(validate_df) == 0:
@@ -56,22 +59,19 @@ def summary_validation(validate_df):
     items = []
     metric_to_validate_pod = {
         "cgroup": "kepler_container_cgroupfs_cpu_usage_us_total",
-        # "hwc": "kepler_container_cpu_instructions_total", 
+        # "hwc": "kepler_container_cpu_instructions_total",
         "hwc": "kepler_container_cpu_cycles_total",
         "kubelet": "kepler_container_kubelet_cpu_usage_total",
         "bpf": "kepler_container_bpf_cpu_time_us_total",
     }
-    metric_to_validate_power = {
-        "rapl": "kepler_node_package_joules_total",
-        "platform": "kepler_node_platform_joules_total"
-    }
+    metric_to_validate_power = {"rapl": "kepler_node_package_joules_total", "platform": "kepler_node_platform_joules_total"}
     for metric, query in metric_to_validate_pod.items():
-        target_df = validate_df[validate_df["query"]==query]
+        target_df = validate_df[validate_df["query"] == query]
         valid_df = target_df[target_df[">0"] > 0]
         if len(valid_df) == 0:
             # no data
             continue
-        availability = len(valid_df)/len(target_df)
+        availability = len(valid_df) / len(target_df)
         valid_datapoint = valid_df[">0"].sum()
         item = dict()
         item["usage_metric"] = metric
@@ -81,7 +81,7 @@ def summary_validation(validate_df):
     summary_df = pd.DataFrame(items)
     print(summary_df)
     for metric, query in metric_to_validate_pod.items():
-        target_df = validate_df[validate_df["query"]==query]
+        target_df = validate_df[validate_df["query"] == query]
         no_data_df = target_df[target_df["count"] == 0]
         zero_data_df = target_df[target_df[">0"] == 0]
         valid_df = target_df[target_df[">0"] > 0]
@@ -93,10 +93,11 @@ def summary_validation(validate_df):
 
         print("{} pods: \tValid\n".format(len(valid_df)))
         print("Valid data points:")
-        print( "Empty" if len(valid_df[">0"]) == 0 else valid_df.groupby(["scenarioID"]).sum()[[">0"]])
+        print("Empty" if len(valid_df[">0"]) == 0 else valid_df.groupby(["scenarioID"]).sum()[[">0"]])
     for metric, query in metric_to_validate_power.items():
-        target_df = validate_df[validate_df["query"]==query]
+        target_df = validate_df[validate_df["query"] == query]
         print("{} data: \t{}".format(metric, target_df[">0"].values))
+
 
 def get_validate_df(benchmark_filename, query_response):
     items = []
@@ -154,7 +155,7 @@ def get_validate_df(benchmark_filename, query_response):
                         item["total"] = 0
                         items += [item]
                         continue
-                    filtered_df = df[df["pod_name"]==podname]
+                    filtered_df = df[df["pod_name"] == podname]
                     # set validate item
                     item = dict()
                     item["pod"] = podname
@@ -181,8 +182,10 @@ def get_validate_df(benchmark_filename, query_response):
     print(validate_df.groupby(["scenarioID", "query"]).sum()[["count", ">0"]])
     return validate_df
 
+
 def query(args):
     from prometheus_api_client import PrometheusConnect
+
     prom = PrometheusConnect(url=args.server, headers=PROM_HEADERS, disable_ssl=PROM_SSL_DISABLE)
     benchmark_filename = args.input
     if benchmark_filename == "":
@@ -203,6 +206,7 @@ def query(args):
         summary_validation(validate_df)
         save_csv(path=data_path, name=args.output + "_validate_result", data=validate_df)
 
+
 def validate(args):
     if not args.benchmark:
         print("Need --benchmark")
@@ -214,9 +218,11 @@ def validate(args):
     summary_validation(validate_df)
     if args.output:
         save_csv(path=data_path, name=args.output, data=validate_df)
-    
+
+
 def assert_train(trainer, data, energy_components):
     import pandas as pd
+
     node_types = pd.unique(data[node_info_column])
     for node_type in node_types:
         node_type_str = int(node_type)
@@ -227,19 +233,13 @@ def assert_train(trainer, data, energy_components):
             if output is not None:
                 assert len(output) == len(X_values), "length of predicted values != features ({}!={})".format(len(output), len(X_values))
 
+
 def get_pipeline(pipeline_name, extractor, profile, isolator, abs_trainer_names, dyn_trainer_names, energy_sources, valid_feature_groups):
     pipeline_path = get_pipeline_path(data_path, pipeline_name=pipeline_name)
     from train import DefaultExtractor, SmoothExtractor, MinIdleIsolator, NoneIsolator, DefaultProfiler, ProfileBackgroundIsolator, TrainIsolator, generate_profiles, NewPipeline
-    supported_extractor = {
-        "default": DefaultExtractor(),
-        "smooth": SmoothExtractor()
-    }
-    supported_isolator = {
-        "min": MinIdleIsolator(),
-        "none": NoneIsolator(),
-        MinIdleIsolator.__name__: MinIdleIsolator(),
-        NoneIsolator.__name__: NoneIsolator()
-    }
+
+    supported_extractor = {"default": DefaultExtractor(), "smooth": SmoothExtractor()}
+    supported_isolator = {"min": MinIdleIsolator(), "none": NoneIsolator(), MinIdleIsolator.__name__: MinIdleIsolator(), NoneIsolator.__name__: NoneIsolator()}
 
     profiles = dict()
     if profile:
@@ -258,19 +258,21 @@ def get_pipeline(pipeline_name, extractor, profile, isolator, abs_trainer_names,
     if isolator not in supported_isolator:
         print("isolator {} is not supported. supported isolator: {}".format(isolator, supported_isolator.keys()))
         return None
-    
+
     if extractor not in supported_extractor:
         print("extractor {} is not supported. supported extractor: {}".format(isolator, supported_extractor.keys()))
         return None
 
     isolator = supported_isolator[isolator]
     extractor = supported_extractor[extractor]
-    pipeline = NewPipeline(pipeline_name, abs_trainer_names, dyn_trainer_names, extractor=extractor, isolator=isolator, target_energy_sources=energy_sources ,valid_feature_groups=valid_feature_groups)
+    pipeline = NewPipeline(pipeline_name, abs_trainer_names, dyn_trainer_names, extractor=extractor, isolator=isolator, target_energy_sources=energy_sources, valid_feature_groups=valid_feature_groups)
     return pipeline
+
 
 def train(args):
     import warnings
     from sklearn.exceptions import ConvergenceWarning
+
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
     if not args.input:
@@ -279,7 +281,7 @@ def train(args):
 
     pipeline_name = DEFAULT_PIPELINE
     if args.pipeline_name:
-       pipeline_name = args.pipeline_name 
+        pipeline_name = args.pipeline_name
 
     inputs = args.input.split(",")
     energy_sources = args.energy_source.split(",")
@@ -289,7 +291,7 @@ def train(args):
         response = load_json(data_path, input)
         query_results = prom_responses_to_results(response)
 
-        valid_fg = get_valid_feature_group_from_queries([query for query in query_results.keys() if len(query_results[query]) > 1 ])
+        valid_fg = get_valid_feature_group_from_queries([query for query in query_results.keys() if len(query_results[query]) > 1])
         print("valid feature group: ", valid_fg)
         if valid_feature_groups is None:
             valid_feature_groups = valid_fg
@@ -297,7 +299,6 @@ def train(args):
             valid_feature_groups = list(set(valid_feature_groups).intersection(set(valid_fg)))
         input_query_results_list += [query_results]
 
-    
     abs_trainer_names = args.abs_trainers.split(",")
     dyn_trainer_names = args.dyn_trainers.split(",")
     pipeline = get_pipeline(pipeline_name, args.extractor, args.profile, args.isolator, abs_trainer_names, dyn_trainer_names, energy_sources, valid_feature_groups)
@@ -308,7 +309,7 @@ def train(args):
         energy_components = PowerSourceMap[energy_source]
         for feature_group in valid_feature_groups:
             success, abs_data, dyn_data = pipeline.process_multiple_query(input_query_results_list, energy_components, energy_source, feature_group=feature_group.name)
-            assert success, "failed to process pipeline {}".format(pipeline.name) 
+            assert success, "failed to process pipeline {}".format(pipeline.name)
             for trainer in pipeline.trainers:
                 if trainer.feature_group == feature_group and trainer.energy_source == energy_source:
                     if trainer.node_level:
@@ -320,9 +321,8 @@ def train(args):
             save_csv(data_saved_path, "{}_{}_abs_data".format(energy_source, feature_group.name), abs_data)
             save_csv(data_saved_path, "{}_{}_dyn_data".format(energy_source, feature_group.name), dyn_data)
 
-
         print("=========== Train {} Summary ============".format(energy_source))
-        # save args 
+        # save args
         argparse_dict = vars(args)
         save_json(pipeline.path, "train_arguments", argparse_dict)
         print("Train args:", argparse_dict)
@@ -340,6 +340,7 @@ def train(args):
 
         warnings.resetwarnings()
 
+
 def estimate(args):
     if not args.input:
         print("must give input filename (query response) via --input for estimation.")
@@ -353,8 +354,8 @@ def estimate(args):
         response = load_json(data_path, input)
         query_results = prom_responses_to_results(response)
         input_query_results_list += [query_results]
-    
-    valid_fg = get_valid_feature_group_from_queries([query for query in query_results.keys() if len(query_results[query]) > 1 ])
+
+    valid_fg = get_valid_feature_group_from_queries([query for query in query_results.keys() if len(query_results[query]) > 1])
     valid_fg_name_list = [fg.name for fg in valid_fg]
     if args.feature_group:
         try:
@@ -391,7 +392,7 @@ def estimate(args):
         if pipeline is None:
             print("cannot get pipeline {}.".format(pipeline_name))
             continue
-        for fg in  valid_fg:
+        for fg in valid_fg:
             print(" Feature Group: ", fg)
             abs_data, dyn_data, power_labels = pipeline.prepare_data_from_input_list(input_query_results_list, energy_components, args.energy_source, fg.name)
             group_path = get_model_group_path(data_path, ot, fg, args.energy_source, assure=False, pipeline_name=pipeline_name)
@@ -434,10 +435,12 @@ def estimate(args):
             os.mkdir(output_folder)
         # save model
         import shutil
-        shutil.make_archive(os.path.join(output_folder, "model"), 'zip', best_model_path)
+
+        shutil.make_archive(os.path.join(output_folder, "model"), "zip", best_model_path)
         # save result
         save_csv(output_folder, "estimation_result", best_result)
-    
+
+
 if __name__ == "__main__":
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Kepler model server entrypoint")
@@ -469,13 +472,12 @@ if __name__ == "__main__":
     parser.add_argument("-ot", "--output-type", type=str, help="Specify output type (AbsPower or DynPower) for energy estimation.", default="AbsPower")
     parser.add_argument("-fg", "--feature-group", type=str, help="Specify target feature group for energy estimation.", default="")
     parser.add_argument("--model-name", type=str, help="Specify target model name for energy estimation.")
-    
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
     if not os.path.exists(data_path):
-        print("{} must be mount, add -v \"$(pwd)\":{} .".format(data_path, data_path))
+        print('{} must be mount, add -v "$(pwd)":{} .'.format(data_path, data_path))
         exit()
 
     # Check if the required argument is provided
@@ -483,5 +485,3 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         getattr(sys.modules[__name__], args.command)(args)
-
-    

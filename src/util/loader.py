@@ -9,19 +9,20 @@ from urllib.request import urlopen
 import requests
 import codecs
 
-FILTER_ITEM_DELIMIT = ';'
-VALUE_DELIMIT = ':'
-ARRAY_DELIMIT = ','
+FILTER_ITEM_DELIMIT = ";"
+VALUE_DELIMIT = ":"
+ARRAY_DELIMIT = ","
 
-DEFAULT_PIPELINE = 'default'
-CHECKPOINT_FOLDERNAME = 'checkpoint'
-DOWNLOAD_FOLDERNAME = 'download'
+DEFAULT_PIPELINE = "default"
+CHECKPOINT_FOLDERNAME = "checkpoint"
+DOWNLOAD_FOLDERNAME = "download"
 
 default_init_model_url = "https://raw.githubusercontent.com/sustainable-computing-io/kepler-model-db/main/models/"
 default_init_pipeline_name = "Linux-4.15.0-213-generic-x86_64_v0.6"
 default_trainer_name = "GradientBoostingRegressorTrainer"
 default_node_type = "1"
 default_feature_group = FeatureGroup.KubeletOnly
+
 
 def load_json(path, name):
     if ".json" not in name:
@@ -33,7 +34,8 @@ def load_json(path, name):
         return res
     except:
         return None
-    
+
+
 def load_pkl(path, name):
     if ".pkl" not in name:
         name = name + ".pkl"
@@ -43,25 +45,30 @@ def load_pkl(path, name):
         return res
     except Exception:
         return None
-   
+
+
 def load_remote_pkl(url_path):
     if ".pkl" not in url_path:
         url_path = url_path + ".pkl"
-    try:        
+    try:
         response = urlopen(url_path)
         loaded_model = joblib.load(response)
         return loaded_model
     except:
         return None
 
+
 def load_metadata(model_path):
     return load_json(model_path, METADATA_FILENAME)
+
 
 def load_scaler(model_path):
     return load_pkl(model_path, SCALER_FILENAME)
 
+
 def load_weight(model_path):
     return load_json(model_path, WEIGHT_FILENAME)
+
 
 def load_profile(profile_path, source):
     profile_filename = os.path.join(profile_path, source + ".json")
@@ -74,16 +81,18 @@ def load_profile(profile_path, source):
             profile = json.load(f)
     return profile
 
+
 def load_csv(path, name):
     csv_file = name + ".csv"
     file_path = os.path.join(path, csv_file)
     try:
         data = pd.read_csv(file_path)
-        data = data.apply(pd.to_numeric, errors='ignore')
+        data = data.apply(pd.to_numeric, errors="ignore")
         return data
     except:
         # print('cannot load {}'.format(file_path))
         return None
+
 
 def parse_filters(filter):
     filter_list = filter.split(FILTER_ITEM_DELIMIT)
@@ -93,34 +102,38 @@ def parse_filters(filter):
         if len(splits) != 2:
             continue
         key = splits[0]
-        if key == 'features':
+        if key == "features":
             value = splits[1].split(ARRAY_DELIMIT)
         else:
             value = splits[1]
         filters[key] = value
-    return filters 
+    return filters
+
 
 def is_valid_model(metadata, filters):
     for attrb, val in filters.items():
         if not hasattr(metadata, attrb) or getattr(metadata, attrb) is None:
-            print('{} has no {}'.format(metadata['model_name'], attrb))
+            print("{} has no {}".format(metadata["model_name"], attrb))
             return False
         else:
             cmp_val = getattr(metadata, attrb)
             val = float(val)
-            if attrb == 'abs_max_corr': # higher is better
+            if attrb == "abs_max_corr":  # higher is better
                 valid = cmp_val >= val
-            else: # lower is better
+            else:  # lower is better
                 valid = cmp_val <= val
             if not valid:
                 return False
     return True
 
+
 def get_model_name(trainer_name, node_type):
     return "{}_{}".format(trainer_name, node_type)
 
+
 def get_pipeline_path(model_toppath, pipeline_name=DEFAULT_PIPELINE):
     return os.path.join(model_toppath, pipeline_name)
+
 
 def get_model_group_path(model_toppath, output_type, feature_group, energy_source, pipeline_name=DEFAULT_PIPELINE, assure=True):
     pipeline_path = get_pipeline_path(model_toppath, pipeline_name)
@@ -134,12 +147,15 @@ def get_model_group_path(model_toppath, output_type, feature_group, energy_sourc
         assure_path(feature_path)
     return feature_path
 
+
 def get_save_path(group_path, trainer_name, node_type):
     return os.path.join(group_path, get_model_name(trainer_name, node_type))
 
+
 def get_archived_file(group_path, model_name):
     save_path = os.path.join(group_path, model_name)
-    return save_path + '.zip'
+    return save_path + ".zip"
+
 
 def download_and_save(url, filepath):
     try:
@@ -150,19 +166,22 @@ def download_and_save(url, filepath):
     if response.status_code != 200:
         print("Failed to load {} to {}: {}".format(url, filepath, response.status_code))
         return None
-    with codecs.open(filepath, 'wb') as f:
+    with codecs.open(filepath, "wb") as f:
         f.write(response.content)
     print("Successfully load {} to {}".format(url, filepath))
     return filepath
 
+
 def list_model_names(group_path):
-    model_names = [f.split('.')[0] for f in os.listdir(group_path) if '.zip' in f]
+    model_names = [f.split(".")[0] for f in os.listdir(group_path) if ".zip" in f]
     return model_names
+
 
 def list_pipelines(model_toppath, energy_source, model_type):
     pipeline_metadata_filename = _pipeline_model_metadata_filename(energy_source, model_type)
     pipeline_names = [f for f in os.listdir(model_toppath) if os.path.exists(os.path.join(model_toppath, f, pipeline_metadata_filename + ".csv"))]
     return pipeline_names
+
 
 def list_all_abs_models(model_toppath, energy_source, valid_fgs, pipeline_name=DEFAULT_PIPELINE):
     abs_models_map = dict()
@@ -172,6 +191,7 @@ def list_all_abs_models(model_toppath, energy_source, valid_fgs, pipeline_name=D
         abs_models_map[group_path] = model_names
     return abs_models_map
 
+
 def list_all_dyn_models(model_toppath, energy_source, valid_fgs, pipeline_name=DEFAULT_PIPELINE):
     dyn_models_map = dict()
     for fg in valid_fgs:
@@ -179,6 +199,7 @@ def list_all_dyn_models(model_toppath, energy_source, valid_fgs, pipeline_name=D
         model_names = list_model_names(group_path)
         dyn_models_map[group_path] = model_names
     return dyn_models_map
+
 
 def _get_metadata_df(group_path):
     metadata_items = []
@@ -191,10 +212,12 @@ def _get_metadata_df(group_path):
                 metadata_items += [metadata]
     return pd.DataFrame(metadata_items)
 
+
 def get_metadata_df(model_toppath, model_type, fg, energy_source, pipeline_name):
     group_path = get_model_group_path(model_toppath, output_type=ModelOutputType[model_type], feature_group=FeatureGroup[fg], energy_source=energy_source, pipeline_name=pipeline_name, assure=False)
     metadata_df = _get_metadata_df(group_path)
     return metadata_df, group_path
+
 
 def get_all_metadata(model_toppath, pipeline_name, clean_empty=False):
     all_metadata = dict()
@@ -216,26 +239,40 @@ def get_all_metadata(model_toppath, pipeline_name, clean_empty=False):
                 os.rmdir(energy_source_path)
 
     return all_metadata
-       
+
+
 def load_pipeline_metadata(pipeline_path, energy_source, model_type):
     pipeline_metadata_filename = _pipeline_model_metadata_filename(energy_source, model_type)
     return load_csv(pipeline_path, pipeline_metadata_filename)
+
 
 def get_download_path():
     path = os.path.join(os.path.dirname(__file__), DOWNLOAD_FOLDERNAME)
     return assure_path(path)
 
+
 def get_download_output_path(energy_source, output_type):
     energy_source_path = assure_path(os.path.join(get_download_path(), energy_source))
     return os.path.join(energy_source_path, output_type.name)
 
-def get_url(output_type, feature_group=default_feature_group, trainer_name=default_trainer_name, node_type=default_node_type, model_topurl=default_init_model_url, energy_source="rapl", pipeline_name=default_init_pipeline_name):
+
+def get_url(
+    output_type,
+    feature_group=default_feature_group,
+    trainer_name=default_trainer_name,
+    node_type=default_node_type,
+    model_topurl=default_init_model_url,
+    energy_source="rapl",
+    pipeline_name=default_init_pipeline_name,
+):
     group_path = get_model_group_path(model_topurl, output_type=output_type, feature_group=feature_group, energy_source=energy_source, pipeline_name=pipeline_name, assure=False)
     model_name = get_model_name(trainer_name, node_type)
     return os.path.join(group_path, model_name + ".zip")
 
+
 def get_pipeline_url(model_topurl=default_init_model_url, pipeline_name=default_init_pipeline_name):
     return os.path.join(model_topurl, pipeline_name + ".zip")
+
 
 def class_to_json(class_obj):
     return json.loads(json.dumps(class_obj.__dict__))

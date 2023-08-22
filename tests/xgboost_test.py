@@ -1,33 +1,30 @@
 import os
 import sys
-from copy import deepcopy
 
-src_path = os.path.join(os.path.dirname(__file__), '../src')
-train_path = os.path.join(os.path.dirname(__file__), '../src/train')
-profile_path = os.path.join(os.path.dirname(__file__), '../src/profile')
+src_path = os.path.join(os.path.dirname(__file__), "../src")
+train_path = os.path.join(os.path.dirname(__file__), "../src/train")
+profile_path = os.path.join(os.path.dirname(__file__), "../src/profile")
 
 sys.path.append(src_path)
 sys.path.append(train_path)
 sys.path.append(profile_path)
 import json
 
-from train import DefaultExtractor, node_info_column, component_to_col, FeatureGroups, FeatureGroup
-from train import load_class
+from train import DefaultExtractor, FeatureGroup
 from profiler import response_to_result
 
 from train.trainer.XGBoostTrainer.main import XGBoostRegressionStandalonePipeline
 from train_types import XGBoostRegressionTrainType
 
-from prom_test import prom_output_path
 
 energy_components = ["package", "core", "uncore", "dram"]
 feature_group = FeatureGroup.BPFIRQ.name
 energy_source = "rapl"
 
-prom_response_file = os.path.join(os.path.dirname(__file__), 'data', 'prom_response.json')
+prom_response_file = os.path.join(os.path.dirname(__file__), "data", "prom_response.json")
 
 
-import pandas as pd
+
 
 def read_sample_query_results():
     with open(prom_response_file) as f:
@@ -35,7 +32,8 @@ def read_sample_query_results():
         return response_to_result(response)
     return dict()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Note that extractor mutates the query results
     query_results = read_sample_query_results()
     assert len(query_results) > 0, "cannot read_sample_query_results"
