@@ -1,16 +1,6 @@
 # trainer_test.py
-
-import os
-import sys
-
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from train import load_class
-from util import PowerSourceMap
+from train.pipeline import load_class
+from util.train_types import PowerSourceMap
 from util.loader import DEFAULT_PIPELINE
 
 from isolator_test import test_isolators, get_isolate_results

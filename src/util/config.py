@@ -2,7 +2,7 @@
 # config.py
 #
 # getConfig: return value set by configuration
-#            which can be from config map or environment variable
+#            which can be from util.config map or environment variable
 #            if not provided, return default value
 # getPath:   return path relative to mount path
 #            create new if not exists
@@ -13,8 +13,8 @@
 #################################################
 
 import os
-from loader import get_url, get_pipeline_url
-from train_types import ModelOutputType, is_support_output_type
+from util.loader import get_url, get_pipeline_url
+from util.train_types import ModelOutputType, is_support_output_type
 
 # must be writable (for shared volume mount)
 MNT_PATH = "/mnt"

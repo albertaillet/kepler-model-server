@@ -9,6 +9,8 @@ COPY src/estimate src/estimate
 COPY src/server src/server
 COPY src/train src/train
 COPY src/util src/util
+COPY setup.py setup.py
+RUN python3.8 -m pip install -e .
 COPY cmd cmd
 
 # port for Model Server

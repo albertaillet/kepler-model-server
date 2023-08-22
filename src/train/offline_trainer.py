@@ -8,34 +8,18 @@
 # client (test):
 #   python tests/offline_trainer_test.py <src_json_file> <save_path>
 
-import os
-import sys
 import importlib
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "util")
-sys.path.append(util_path)
-model_path = os.path.join(os.path.dirname(__file__), "..", "estimate", "model")
-sys.path.append(model_path)
-cur_path = os.path.join(os.path.dirname(__file__), ".")
-sys.path.append(cur_path)
-prom_path = os.path.join(os.path.dirname(__file__), "prom")
-sys.path.append(prom_path)
-extractor_path = os.path.join(os.path.dirname(__file__), "extractor")
-sys.path.append(extractor_path)
-profiler_path = os.path.join(os.path.dirname(__file__), "profiler")
-sys.path.append(profiler_path)
-isolator_path = os.path.join(os.path.dirname(__file__), "isolator")
-sys.path.append(isolator_path)
 
-from config import model_toppath
-from loader import get_pipeline_path, DEFAULT_PIPELINE
-from train_types import PowerSourceMap
-from prom_types import get_valid_feature_group_from_queries, prom_responses_to_results
-from profiler import Profiler, generate_profiles
-from extractor import DefaultExtractor
-from isolator import ProfileBackgroundIsolator
-from train_isolator import TrainIsolator
-from pipeline import NewPipeline
+from util.config import model_toppath
+from util.loader import get_pipeline_path, DEFAULT_PIPELINE
+from util.train_types import PowerSourceMap
+from util.prom_types import get_valid_feature_group_from_queries, prom_responses_to_results
+from train.profiler.profiler import Profiler, generate_profiles
+from train.extractor.extractor import DefaultExtractor
+from train.isolator.isolator import ProfileBackgroundIsolator
+from train.isolator.train_isolator import TrainIsolator
+from train.pipeline import NewPipeline
 
 import shutil
 
@@ -89,7 +73,7 @@ class TrainRequest:
                 isolator_args["abs_pipeline_name"] = DEFAULT_PIPELINE
             isolator = TrainIsolator(idle_data, profiler=profiler, abs_pipeline_name=isolator_args["abs_pipeline_name"])
         else:
-            module_path = importlib.import_module("isolator")
+            module_path = importlib.import_module("train.isolator.isolator")
             # default init, no args
             isolator = getattr(module_path, isolator_key)()
         return isolator

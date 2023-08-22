@@ -1,22 +1,13 @@
 import datetime
 import json
 import os
-import sys
 from typing import List, Optional, Tuple, Dict, Any
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 from sklearn.model_selection import train_test_split, RepeatedKFold, cross_val_score
 import numpy as np
 import xgboost as xgb
-
-train_path = os.path.join(os.path.dirname(__file__), "../../")
-prom_path = os.path.join(os.path.dirname(__file__), "../../../prom")
-util_path = os.path.join(os.path.dirname(__file__), "../../../util")
-sys.path.append(train_path)
-sys.path.append(prom_path)
-sys.path.append(util_path)
-
-from train_types import (
+from util.train_types import (
     FeatureGroup,
     FeatureGroups,
     EnergyComponentLabelGroups,
@@ -25,7 +16,7 @@ from train_types import (
     XGBoostModelFeatureOrLabelIncompatabilityException,
     XGBoostRegressionTrainType,
 )
-from extractor.extractor import DefaultExtractor
+from train.extractor.extractor import DefaultExtractor
 
 
 # Currently Cgroup Metrics are not exported

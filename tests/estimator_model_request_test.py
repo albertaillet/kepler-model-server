@@ -14,26 +14,14 @@ import requests
 
 # import from src
 import os
-import sys
 
-server_path = os.path.join(os.path.dirname(__file__), "../src")
-util_path = os.path.join(os.path.dirname(__file__), "../src/util")
-train_path = os.path.join(os.path.dirname(__file__), "../src/train")
-estimate_path = os.path.join(os.path.dirname(__file__), "../src/estimate")
-prom_path = os.path.join(os.path.dirname(__file__), "../src/train/prom")
 
-sys.path.append(server_path)
-sys.path.append(util_path)
-sys.path.append(train_path)
-sys.path.append(prom_path)
-sys.path.append(estimate_path)
-
-from train_types import FeatureGroups, FeatureGroup, ModelOutputType
-from loader import get_download_output_path
+from util.train_types import FeatureGroups, FeatureGroup, ModelOutputType
+from util.loader import get_download_output_path
 from estimate.estimator import handle_request, loaded_model, PowerRequest
 from estimate.model_server_connector import list_all_models
 from estimate.archived_model import get_achived_model, reset_failed_list
-from config import get_init_model_url, set_env_from_model_config, get_url
+from util.config import get_init_model_url, set_env_from_model_config, get_url
 from extractor_test import test_energy_source
 
 from estimator_power_request_test import generate_request
@@ -60,7 +48,7 @@ if __name__ == "__main__":
             request_json = generate_request(None, n=10, metrics=metrics, output_type=output_type_name)
             data = json.dumps(request_json)
             output = handle_request(data)
-            print("result {}/{} from model server: {}".format(output_type_name, fg_name, output))
+            print("result {}/{} from estimate.model server: {}".format(output_type_name, fg_name, output))
             assert len(output["powers"]) > 0, "cannot get power {}\n {}".format(output["msg"], request_json)
 
     # test with initial models

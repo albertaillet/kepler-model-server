@@ -1,18 +1,10 @@
-import os
-import sys
-
 import numpy as np
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
 
-model_path = os.path.join(os.path.dirname(__file__), "..", "..", "estimate", "model")
-sys.path.append(model_path)
-
-from train_types import PowerSourceMap
-from prom_types import TIMESTAMP_COL
-from extract_types import col_to_component
-from model import get_label_power_colname
+from util.train_types import PowerSourceMap
+from util.prom_types import TIMESTAMP_COL
+from util.extract_types import col_to_component
+from estimate.model.model import get_label_power_colname
 
 
 def drop_zero_column(data, cols):

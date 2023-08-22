@@ -2,8 +2,8 @@ import os
 import json
 import joblib
 import pandas as pd
-from saver import assure_path, METADATA_FILENAME, SCALER_FILENAME, WEIGHT_FILENAME, _pipeline_model_metadata_filename
-from train_types import ModelOutputType, FeatureGroup, PowerSourceMap, all_feature_groups
+from util.saver import assure_path, METADATA_FILENAME, SCALER_FILENAME, WEIGHT_FILENAME, _pipeline_model_metadata_filename
+from util.train_types import ModelOutputType, FeatureGroup, PowerSourceMap, all_feature_groups
 from urllib.request import urlopen
 
 import requests

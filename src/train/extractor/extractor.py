@@ -1,16 +1,22 @@
-import os
-import sys
 import pandas as pd
 from abc import ABCMeta, abstractmethod
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
-
-from train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
-from prom_types import TIMESTAMP_COL, SOURCE_COL, get_energy_unit, usage_ratio_query, node_info_query, energy_component_to_query, feature_to_query, pkg_id_column, container_id_cols, node_info_column
-from loader import default_node_type
-from extract_types import container_id_colname, ratio_to_col, component_to_col, get_unit_vals
-from preprocess import drop_zero_column, find_correlations
+from util.train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
+from util.prom_types import (
+    TIMESTAMP_COL,
+    SOURCE_COL,
+    get_energy_unit,
+    usage_ratio_query,
+    node_info_query,
+    energy_component_to_query,
+    feature_to_query,
+    pkg_id_column,
+    container_id_cols,
+    node_info_column,
+)
+from util.loader import default_node_type
+from util.extract_types import container_id_colname, ratio_to_col, component_to_col, get_unit_vals
+from train.extractor.preprocess import drop_zero_column, find_correlations
 
 
 # append ratio for each unit

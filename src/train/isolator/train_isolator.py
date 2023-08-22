@@ -1,14 +1,9 @@
 import os
-import sys
 import numpy as np
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "util")
-sys.path.append(util_path)
-estimate_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "estimate")
-sys.path.append(estimate_path)
 
-from isolator import Isolator, isolate_container
-from estimate import (
+from train.isolator.isolator import Isolator, isolate_container
+from estimate.model.model import (
     load_model,
     get_predicted_power_colname,
     get_predicted_background_power_colname,
@@ -17,10 +12,10 @@ from estimate import (
     get_label_power_colname,
     get_background_containers,
 )
-from extractor import find_correlations
-from preprocess import get_extracted_power_labels
+from train.extractor.extractor import find_correlations
+from train.extractor.preprocess import get_extracted_power_labels
 
-from util import PowerSourceMap
+from util.train_types import PowerSourceMap
 from util.train_types import get_valid_feature_groups
 from util.prom_types import TIMESTAMP_COL
 from util.extract_types import container_level_index, col_to_component

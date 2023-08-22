@@ -7,22 +7,16 @@ import numpy as np
 import pandas as pd
 
 import os
-import sys
 
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from util import assure_path, FeatureGroups, FeatureGroup, PowerSourceMap
+from util.saver import assure_path
+from util.train_types import FeatureGroups, FeatureGroup, PowerSourceMap
 from util.prom_types import TIMESTAMP_COL
 from util.extract_types import col_to_component
 
 from sklearn.preprocessing import MinMaxScaler
 
 from train.extractor.preprocess import get_extracted_power_labels
-from estimate import get_label_power_colname
+from estimate.model.model import get_label_power_colname
 
 plot_output_path = os.path.join(os.path.dirname(__file__), "data", "plot_output")
 assure_path(plot_output_path)

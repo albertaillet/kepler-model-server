@@ -1,12 +1,9 @@
 from sklearn.metrics import mean_absolute_error
 
 import os
-import sys
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
-
-from util import save_pkl, load_pkl
+from util.saver import save_pkl
+from util.loader import load_pkl
 
 from . import Trainer
 

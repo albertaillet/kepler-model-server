@@ -1,20 +1,14 @@
 import os
-import sys
 import numpy as np
-
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from util import assure_path, save_csv, load_csv, FeatureGroups, FeatureGroup
-from util.train_types import all_feature_groups
+from util.loader import assure_path, load_csv
+from util.saver import save_csv
+from util.train_types import all_feature_groups, FeatureGroups, FeatureGroup
 from util.extract_types import container_level_index, node_level_index
 from util.prom_types import prom_responses_to_results
 
-from train import MinIdleIsolator, ProfileBackgroundIsolator, TrainIsolator, NoneIsolator
-from train import generate_profiles
+from train.isolator.isolator import MinIdleIsolator, ProfileBackgroundIsolator, NoneIsolator
+from train.isolator.train_isolator import TrainIsolator
+from train.profiler.profiler import generate_profiles
 from train.extractor.preprocess import find_correlations
 
 from train import DefaultProfiler

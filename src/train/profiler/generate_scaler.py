@@ -1,7 +1,7 @@
 ############################################################
 ##
 ## generate_scaler
-## generate a scaler for each node type from prom query
+## generate a scaler for each node type from train.prom query
 ##
 ## ./python generate_scaler.py query_output_folder
 ## e.g., ./python generate_scaler.py ../tests/data/prom_output
@@ -10,20 +10,7 @@
 ##
 ############################################################
 
-import sys
 import os
-
-src_path = os.path.join(os.path.dirname(__file__), "..", "..")
-prom_path = os.path.join(os.path.dirname(__file__), "..", "..", "prom")
-train_path = os.path.join(os.path.dirname(__file__), "..", "..", "train")
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-tool_path = os.path.join(os.path.dirname(__file__), "..", "..", "profile", "tool")
-
-sys.path.append(src_path)
-sys.path.append(prom_path)
-sys.path.append(train_path)
-sys.path.append(util_path)
-sys.path.append(tool_path)
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 

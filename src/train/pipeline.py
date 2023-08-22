@@ -3,22 +3,16 @@ import sys
 import threading
 import pandas as pd
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "util")
-sys.path.append(util_path)
-extractor_path = os.path.join(os.path.dirname(__file__), "extractor")
-sys.path.append(extractor_path)
-isolator_path = os.path.join(os.path.dirname(__file__), "isolator")
-sys.path.append(isolator_path)
 
-from extractor import DefaultExtractor
-from isolator import MinIdleIsolator
+from train.extractor.extractor import DefaultExtractor
+from train.isolator.isolator import MinIdleIsolator
 
-from train_types import PowerSourceMap, FeatureGroups, ModelOutputType
-from config import model_toppath, ERROR_KEY
-from loader import get_all_metadata, get_pipeline_path, get_metadata_df, get_archived_file
-from saver import save_pipeline_metadata
+from util.train_types import PowerSourceMap, FeatureGroups, ModelOutputType
+from util.config import model_toppath, ERROR_KEY
+from util.loader import get_all_metadata, get_pipeline_path, get_metadata_df, get_archived_file
+from util.saver import save_pipeline_metadata
 
-from format import print_bounded_multiline_message
+from util.format import print_bounded_multiline_message
 
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
@@ -28,7 +22,7 @@ import shutil
 
 def load_class(module_name, class_name):
     path = os.path.join(os.path.dirname(__file__), "{}/{}".format(module_name, class_name))
-    sys.path.append(path)
+    sys.path.append(path)  # TODO: remove this
     import importlib
 
     module_path = importlib.import_module("train.{}.{}.main".format(module_name, class_name))

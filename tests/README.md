@@ -158,7 +158,9 @@ Optional arguments:
 
  Reuse (test_model):
  ```python
- from util import ModelOutputType, model_toppath, DEFAULT_PIPELINE
+ from util.train_types import ModelOutputType
+ from util.config import model_toppath
+ from util.loader import DEFAULT_PIPELINE
  from isolator_test import get_isolate_results
  from extractor_test import get_extract_results, get_expected_power_columns
 

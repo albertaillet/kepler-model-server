@@ -3,20 +3,15 @@
 # - model.get_power()
 
 import os
-import sys
 import pandas as pd
 
 
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from estimate import load_model, default_predicted_col_func, compute_error
+from estimate.model.model import load_model, default_predicted_col_func
+from estimate.model.estimate_common import compute_error
 from train.trainer import model_toppath
 from util.loader import get_model_group_path, DEFAULT_PIPELINE
-from util import FeatureGroup, ModelOutputType, list_model_names
+from util.train_types import FeatureGroup, ModelOutputType
+from util.loader import list_model_names
 from util.prom_types import TIMESTAMP_COL
 
 from isolator_test import test_isolators, get_isolate_results, isolator_output_path

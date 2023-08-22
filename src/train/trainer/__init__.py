@@ -3,16 +3,11 @@ import shutil
 from abc import ABCMeta, abstractmethod
 
 import os
-import sys
-
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
-
-from util import assure_path, ModelOutputType, FeatureGroups, FeatureGroup, save_json, save_metadata, load_metadata, save_scaler, save_weight
-
+from util.saver import assure_path, save_json, save_metadata, save_scaler, save_weight
+from util.train_types import ModelOutputType, FeatureGroups, FeatureGroup
 from util.prom_types import node_info_column
 from util.extract_types import component_to_col, get_unit_vals, ratio_to_col
-from util.loader import get_model_group_path, get_save_path, get_model_name, get_archived_file, CHECKPOINT_FOLDERNAME, load_scaler
+from util.loader import get_model_group_path, get_save_path, get_model_name, get_archived_file, CHECKPOINT_FOLDERNAME, load_scaler, load_metadata
 from util.config import model_toppath
 
 

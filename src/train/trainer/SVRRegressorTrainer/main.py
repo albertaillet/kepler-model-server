@@ -1,14 +1,9 @@
 from sklearn.svm import SVR
 from sklearn.pipeline import make_pipeline
 
-import os
-import sys
-
-trainer_path = os.path.join(os.path.dirname(__file__), "..")
-sys.path.append(trainer_path)
 
 common_node_type = 1
-from trainer.scikit import ScikitTrainer
+from train.trainer.scikit import ScikitTrainer
 
 
 class SVRRegressorTrainer(ScikitTrainer):

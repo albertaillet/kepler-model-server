@@ -1,20 +1,11 @@
 import os
-import sys
-
-src_path = os.path.join(os.path.dirname(__file__), "../src")
-train_path = os.path.join(os.path.dirname(__file__), "../src/train")
-profile_path = os.path.join(os.path.dirname(__file__), "../src/profile")
-
-sys.path.append(src_path)
-sys.path.append(train_path)
-sys.path.append(profile_path)
 import json
 
-from train import DefaultExtractor, FeatureGroup
-from profiler import response_to_result
+from train import DefaultExtractor
+from train.profiler.profiler import response_to_result
 
 from train.trainer.XGBoostTrainer.main import XGBoostRegressionStandalonePipeline
-from train_types import XGBoostRegressionTrainType
+from util.train_types import XGBoostRegressionTrainType, FeatureGroup
 
 
 energy_components = ["package", "core", "uncore", "dram"]
@@ -22,8 +13,6 @@ feature_group = FeatureGroup.BPFIRQ.name
 energy_source = "rapl"
 
 prom_response_file = os.path.join(os.path.dirname(__file__), "data", "prom_response.json")
-
-
 
 
 def read_sample_query_results():

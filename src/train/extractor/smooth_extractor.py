@@ -1,12 +1,5 @@
-import os
-import sys
-
-from extractor import DefaultExtractor, find_correlations
-
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
-
-from train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
+from train.extractor.extractor import DefaultExtractor, find_correlations
+from util.train_types import FeatureGroups, FeatureGroup, SYSTEM_FEATURES
 
 
 class SmoothExtractor(DefaultExtractor):

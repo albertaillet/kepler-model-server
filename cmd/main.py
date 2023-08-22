@@ -15,18 +15,14 @@ data_path = os.getenv("CPE_DATAPATH", data_path)
 # set model top path to data path
 os.environ["MODEL_PATH"] = data_path
 
-cur_path = os.path.join(os.path.dirname(__file__), ".")
-sys.path.append(cur_path)
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-
 from util.prom_types import PROM_SERVER, PROM_QUERY_INTERVAL, PROM_QUERY_STEP, PROM_HEADERS, PROM_SSL_DISABLE
 from util.prom_types import metric_prefix as KEPLER_METRIC_PREFIX, node_info_column, prom_responses_to_results, TIMESTAMP_COL
 from util.train_types import ModelOutputType, FeatureGroup
 from util.loader import load_json, DEFAULT_PIPELINE, load_pipeline_metadata, get_pipeline_path, get_model_group_path, list_pipelines, list_model_names, load_metadata
 from util.saver import save_json, save_csv
 from util.config import ERROR_KEY
-from util import get_valid_feature_group_from_queries, PowerSourceMap
+from util.prom_types import get_valid_feature_group_from_queries
+from util.train_types import PowerSourceMap
 from train.prom.prom_query import _range_queries
 
 

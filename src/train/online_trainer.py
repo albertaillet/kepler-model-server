@@ -1,33 +1,21 @@
 # TODO: test
-import os
-import sys
 import time
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "util")
-sys.path.append(util_path)
-prom_path = os.path.join(os.path.dirname(__file__), "prom")
-sys.path.append(prom_path)
-extractor_path = os.path.join(os.path.dirname(__file__), "extractor")
-sys.path.append(extractor_path)
-profiler_path = os.path.join(os.path.dirname(__file__), "profiler")
-sys.path.append(profiler_path)
-isolator_path = os.path.join(os.path.dirname(__file__), "isolator")
-sys.path.append(isolator_path)
 
-from prom_query import PrometheusClient
-from prom_types import get_valid_feature_group_from_queries, PROM_QUERY_INTERVAL
-from config import getConfig
-from loader import DEFAULT_PIPELINE
+from train.prom.prom_query import PrometheusClient
+from util.prom_types import get_valid_feature_group_from_queries, PROM_QUERY_INTERVAL
+from util.config import getConfig
+from util.loader import DEFAULT_PIPELINE
 
 SAMPLING_INTERVAL = PROM_QUERY_INTERVAL
 SAMPLING_INTERVAL = getConfig("SAMPLING_INTERVAL", SAMPLING_INTERVAL)
 SAMPLING_INTERVAL = int(SAMPLING_INTERVAL)
 
-from train_types import PowerSourceMap, FeatureGroups
-from pipeline import NewPipeline
-from extractor import DefaultExtractor
-from isolator import MinIdleIsolator, ProfileBackgroundIsolator
-from profiler import load_all_profiles
+from util.train_types import PowerSourceMap, FeatureGroups
+from train.pipeline import NewPipeline
+from train.extractor.extractor import DefaultExtractor
+from train.isolator.isolator import MinIdleIsolator, ProfileBackgroundIsolator
+from train.profiler.profiler import load_all_profiles
 
 
 default_trainers = ["GradientBoostingRegressorTrainer"]

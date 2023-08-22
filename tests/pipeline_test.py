@@ -1,14 +1,6 @@
-import os
-import sys
-
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from train import NewPipeline
-from util import get_valid_feature_group_from_queries, PowerSourceMap
+from train.pipeline import NewPipeline
+from util.prom_types import get_valid_feature_group_from_queries
+from util.train_types import PowerSourceMap
 from util.loader import DEFAULT_PIPELINE
 
 from prom_test import get_query_results, prom_output_path, prom_output_filename

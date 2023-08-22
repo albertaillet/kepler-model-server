@@ -1,20 +1,12 @@
-import os
-import sys
 import pandas as pd
 from abc import ABCMeta, abstractmethod
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
 
-estimate_path = os.path.join(os.path.dirname(__file__), "..", "..", "estimate")
-sys.path.append(estimate_path)
+from util.train_types import PowerSourceMap
+from util.extract_types import container_id_colname, col_to_component, get_num_of_unit, all_container_key
+from util.prom_types import TIMESTAMP_COL, node_info_column, get_container_name_from_id
 
-
-from train_types import PowerSourceMap
-from extract_types import container_id_colname, col_to_component, get_num_of_unit, all_container_key
-from prom_types import TIMESTAMP_COL, node_info_column, get_container_name_from_id
-
-from estimate import (
+from estimate.model.model import (
     get_background_containers,
     get_predicted_power_colname,
     get_predicted_background_power_colname,

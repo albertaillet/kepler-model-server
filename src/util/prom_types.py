@@ -1,6 +1,6 @@
-from config import getConfig
+from util.config import getConfig
 import pandas as pd
-from train_types import SYSTEM_FEATURES, FeatureGroups, FeatureGroup, get_valid_feature_groups
+from util.train_types import SYSTEM_FEATURES, FeatureGroups, FeatureGroup, get_valid_feature_groups
 
 PROM_SERVER = "http://localhost:9090"
 PROM_SSL_DISABLE = "True"

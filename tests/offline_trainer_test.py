@@ -11,16 +11,8 @@
 import requests
 
 import os
-import sys
 import shutil
 import codecs
-
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
 from train.offline_trainer import TrainAttribute, TrainRequest, serve_port
 
 
@@ -56,8 +48,6 @@ def get_target_path(save_path, energy_source, feature_group):
     if not os.path.exists(feature_path):
         os.mkdir(feature_path)
     return feature_path
-
-
 
 
 def make_request(pipeline_name, idle_prom_response, isolator, isolator_args, prom_response, energy_source, save_path):

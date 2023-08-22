@@ -5,24 +5,16 @@
 # from extractor_test import get_extract_results
 # extract_results = get_extract_results(extractor_name, feature_group, node_level)
 
-# import external src
 import os
-import sys
-
-#################################################################
-# import internal src
-src_path = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.append(src_path)
-#################################################################
-
-from train import load_class
-from train import DefaultExtractor, SmoothExtractor
+from train import DefaultExtractor
+from train.extractor.smooth_extractor import SmoothExtractor
+from train.pipeline import load_class
 from util.extract_types import component_to_col
-from util.prom_types import node_info_column
+from util.prom_types import node_info_column, get_valid_feature_group_from_queries
 from util.train_types import all_feature_groups
-from util import FeatureGroups, FeatureGroup, PowerSourceMap
-from util import assure_path, get_valid_feature_group_from_queries
-from util import save_csv, load_csv
+from util.train_types import FeatureGroups, FeatureGroup, PowerSourceMap
+from util.loader import assure_path, load_csv
+from util.saver import save_csv
 
 from prom_test import get_query_results
 

@@ -1,18 +1,7 @@
-import os
-import sys
+from estimate.model.estimate_common import transform_and_predict, load_model_by_pickle, load_model_by_json, is_component_model
 
-cur_path = os.path.join(os.path.dirname(__file__), ".")
-sys.path.append(cur_path)
 
-from estimate_common import transform_and_predict, load_model_by_pickle, load_model_by_json, is_component_model
-
-import os
-import sys
-
-src_path = os.path.join(os.path.dirname(__file__), "..", "..")
-sys.path.append(src_path)
-
-from util import ModelOutputType
+from util.train_types import ModelOutputType
 
 import collections.abc
 

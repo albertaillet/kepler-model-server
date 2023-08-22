@@ -13,12 +13,9 @@ else:
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 import os
-import sys
 
-util_path = os.path.join(os.path.dirname(__file__), "..", "..", "util")
-sys.path.append(util_path)
 
-from loader import load_pkl, load_json
+from util.loader import load_pkl, load_json
 
 
 def is_component_model(model_file):
